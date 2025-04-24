@@ -18,6 +18,10 @@ export default function Login() {
     navigation.navigate('Pin');
   };
 
+  const goToPhoneLogin = () => {
+    navigation.navigate('PhoneLogin');
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.logoContainer}>
@@ -36,7 +40,7 @@ export default function Login() {
       </View>
 
       <View style={styles.buttonContainer}>
-        <TouchableOpacity style={[styles.button, styles.googleButton]}>
+        {/* <TouchableOpacity style={[styles.button, styles.googleButton]}>
           <Text style={styles.buttonText}>Continue with Google</Text>
           <Image
             source={require('./assets/google-icon.png')}
@@ -50,9 +54,9 @@ export default function Login() {
             source={require('./assets/apple-icon.png')}
             style={styles.buttonIcon}
           />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
-        <TouchableOpacity style={[styles.button, styles.phoneButton]}>
+        <TouchableOpacity style={[styles.button, styles.phoneButton]} onPress={goToPhoneLogin}>
           <Text style={styles.buttonText}>Continue with Phone Number</Text>
         </TouchableOpacity>
       </View>
