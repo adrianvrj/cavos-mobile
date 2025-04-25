@@ -14,6 +14,7 @@ import Invest from './actions/Invest';
 import { supabase } from './lib/supabaseClient';
 import PhoneLogin from './auth/phone/PhoneLogin';
 import PhoneOTP from './auth/phone/PhoneOTP';
+import Providers from './Providers';
 
 const Stack = createNativeStackNavigator();
 
@@ -45,7 +46,7 @@ export default function AppNavigator() {
   }
 
   return (
-    <NavigationContainer>
+    <Providers>
       <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName={initialRoute}>
         <Stack.Screen name="Login" component={Login} />
         <Stack.Screen name="Pin" component={Pin} />
@@ -57,6 +58,6 @@ export default function AppNavigator() {
         <Stack.Screen name="PhoneLogin" component={PhoneLogin} />
         <Stack.Screen name="PhoneOTP" component={PhoneOTP} />
       </Stack.Navigator>
-    </NavigationContainer>
+    </Providers>
   );
 }

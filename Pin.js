@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
     StyleSheet,
     Text,
@@ -12,9 +12,15 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import * as Font from 'expo-font';
 import { useFonts, JetBrainsMono_400Regular } from '@expo-google-fonts/jetbrains-mono';
-import BottomMenu from './components/BottomMenu';
 import Header from './components/Header';
 import { MaterialIcons } from '@expo/vector-icons';
+import { supabase } from './lib/supabaseClient';
+import { useAtomValue, useSetAtom } from 'jotai';
+import { userIdAtom } from './atoms/userId';
+import { wallet_provider_api, WALLET_PROVIDER_TOKEN } from './lib/constants';
+import axios from 'axios';
+import { decryptPin, decryptSecretWithPin, encryptPin } from './lib/utils';
+import { walletAtom } from './atoms/wallet';
 
 const { width, height } = Dimensions.get('window');
 
@@ -27,6 +33,8 @@ export default function Pin() {
     const [pin, setPin] = useState('');
     const [error, setError] = useState(false);
     const [attempts, setAttempts] = useState(0);
+    const userId = useAtomValue(userIdAtom);
+    const setWallet = useSetAtom(walletAtom);
 
     const [fontsLoaded] = Font.useFonts({
         'Satoshi-Variable': require('./assets/fonts/Satoshi-Variable.ttf'),
@@ -75,28 +83,90 @@ export default function Pin() {
         navigation.navigate('Dashboard');
     };
 
-    const validatePin = (pinP) => {
-        if (pinP !== '123456') {
-            setError(true);
-            setAttempts(prev => {
-                const newAttempts = prev + 1;
-    
-                if (newAttempts >= 3) {
-                    Alert.alert('Too Many Attempts', 'Please try again later or reset your PIN.');
-                }
-    
-                return newAttempts;
+    const createWallet = async (pinP) => {
+        try {
+            const response = await axios.get(wallet_provider_api, {
+                params: { pinP },
+                headers: { Authorization: `Bearer ${WALLET_PROVIDER_TOKEN}` },
             });
-            setPin('');
-        } else {
-            goToDashboard();
+            return response.data;
+        } catch (err) {
+            Alert.alert("Error generating wallet: " + err);
+        }
+    };
+
+
+    const validatePin = async (pinP) => {
+        const hashedPin = encryptPin(pinP);
+        try {
+            const { data, error } = await supabase
+                .from('user_wallet')
+                .select('*')
+                .eq('uid', userId);
+
+            if (error) {
+                console.error('Supabase read error:', error);
+                Alert.alert('Error reading from database');
+                return;
+            }
+
+            if (data.length === 0) {
+                const wallet_details = await createWallet(hashedPin);
+
+                if (!wallet_details || !wallet_details.address) {
+                    Alert.alert('Wallet creation failed. Please try again.');
+                    return;
+                }
+
+                const { error: insertError } = await supabase
+                    .from('user_wallet')
+                    .insert([
+                        {
+                            uid: userId,
+                            address: wallet_details.address,
+                            public_key: wallet_details.public_key,
+                            private_key: wallet_details.private_key,
+                            pin: hashedPin,
+                        },
+                    ]);
+
+                if (insertError) {
+                    console.error('Insert error:', insertError);
+                    Alert.alert('Error saving wallet to database');
+                    return;
+                }
+                setWallet({
+                    uid: userId,
+                    address: wallet_details.address,
+                    public_key: wallet_details.public_key,
+                    private_key: wallet_details.private_key,
+                    pin: hashedPin,
+                });
+                Alert.alert("Account setup successful!", "", [
+                    {
+                        text: "Continue",
+                        onPress: () => navigation.navigate('Dashboard')
+                    }
+                ]);
+            } else {
+                if (decryptPin(data[0].pin) !== pinP) {
+                    Alert.alert("Wrong pin!");
+                }
+                else {
+                    setWallet(data[0]);
+                    navigation.navigate('Dashboard');
+                }
+            }
+        } catch (err) {
+            console.error('Unexpected error in validatePin:', err);
+            Alert.alert('Unexpected error occurred');
         }
     };
 
     return (
         <SafeAreaView style={styles.container}>
             {/* Header with Back Button */}
-            <Header showBackButton={true}/>
+            <Header showBackButton={true} />
 
             {/* PIN Content */}
             <View style={styles.content}>
