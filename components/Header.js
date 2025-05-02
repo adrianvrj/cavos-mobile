@@ -1,10 +1,12 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
-import { Home, TrendingUp, Settings, LogOut } from 'lucide-react-native';
+import { View, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
+import { useUserStore } from '../atoms/userId';
 
 export default function Header() {
     const navigation = useNavigation();
+    const setUserId = useUserStore((state) => state.setUserId);
 
     const goToLogin = () => {
         navigation.navigate('Login');
@@ -20,7 +22,7 @@ export default function Header() {
                 />
             </View>
             <TouchableOpacity style={styles.logoutButton} onPress={goToLogin}>
-                <LogOut color="#FFFFE3"></LogOut>
+                <Icon name="log-out-outline" size={24} color="#FFFFE3" />
             </TouchableOpacity>
         </View>
     );
@@ -36,10 +38,6 @@ const styles = StyleSheet.create({
     logoutButton: {
         padding: 10,
         marginRight: 10,
-    },
-    logoutText: {
-        color: '#FFFFE3',
-        fontSize: 14,
     },
     emptySpace: {
         width: 50, // Para equilibrar el header y mantener el logo centrado

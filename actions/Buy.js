@@ -15,9 +15,8 @@ import * as Font from 'expo-font';
 import { useFonts, JetBrainsMono_400Regular } from '@expo-google-fonts/jetbrains-mono';
 import BottomMenu from '../components/BottomMenu';
 import Header from '../components/Header';
-import { MaterialIcons, AntDesign } from '@expo/vector-icons';
-import { useAtomValue } from 'jotai';
-import { walletAtom } from '../atoms/wallet';
+import { MaterialIcons } from '@expo/vector-icons';
+import { useWallet } from '../atoms/wallet';
 
 const { width, height } = Dimensions.get('window');
 
@@ -26,8 +25,7 @@ const verticalScale = size => height / 812 * size;
 const moderateScale = (size, factor = 0.5) => size + (scale(size) - size) * factor;
 
 export default function Buy() {
-    const navigation = useNavigation();
-    const wallet = useAtomValue(walletAtom);
+    const wallet = useWallet((state) => state.wallet);
 
     const [fontsLoaded] = Font.useFonts({
         'Satoshi-Variable': require('../assets/fonts/Satoshi-Variable.ttf'),

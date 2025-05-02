@@ -1,3 +1,6 @@
-import { atom } from 'jotai';
+import { create } from 'zustand'
 
-export const walletAtom = atom(null);
+export const useWallet = create((set) => ({
+  wallet: null,
+  setWallet: (pWallet) => set({ wallet: pWallet }),
+}));

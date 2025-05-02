@@ -1,21 +1,23 @@
-import React, { useState } from 'react';
-import { 
-  StyleSheet, 
-  Text, 
-  View, 
-  TouchableOpacity, 
-  SafeAreaView, 
-  ScrollView,
-  TextInput,
-  Dimensions,
-  Platform,
-  Alert
+import React, { useState, useEffect } from 'react';
+import {
+    StyleSheet,
+    Text,
+    View,
+    TouchableOpacity,
+    SafeAreaView,
+    ScrollView,
+    TextInput,
+    Dimensions,
+    Platform,
+    Alert
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import * as Font from 'expo-font';
 import { useFonts, JetBrainsMono_400Regular } from '@expo-google-fonts/jetbrains-mono';
 import BottomMenu from '../components/BottomMenu';
 import Header from '../components/Header';
+import { useWallet } from '../atoms/wallet';
+import { getWalletBalance } from '../lib/utils';
 
 const { width, height } = Dimensions.get('window');
 
@@ -26,7 +28,9 @@ const moderateScale = (size, factor = 0.5) => size + (scale(size) - size) * fact
 export default function Invest() {
     const navigation = useNavigation();
     const [investmentAmount, setInvestmentAmount] = useState('');
-    const [selectedPool, setSelectedPool] = useState('Vesu Pool'); // Default selection
+    const [selectedPool, setSelectedPool] = useState('Vesu Pool');
+    const [balance, setBalance] = useState(0);
+    const wallet = useWallet((state) => state.wallet);
 
     const [fontsLoaded] = Font.useFonts({
         'Satoshi-Variable': require('../assets/fonts/Satoshi-Variable.ttf'),
@@ -36,17 +40,23 @@ export default function Invest() {
         JetBrainsMono_400Regular,
     });
 
-    if (!fontsLoaded || !googleFontsLoaded) {
-        return null;
-    }
-
     Text.defaultProps = Text.defaultProps || {};
     Text.defaultProps.style = { fontFamily: 'Satoshi-Variable' };
 
-    // Sample data - in a real app this would come from your backend
-    const userBalance = 100.00;
-    const investmentPools = [
-    ];
+    useEffect(() => {
+        async function getAccountInfo() {
+            try {
+                const newBalance = await getWalletBalance(wallet.address);
+                setBalance(newBalance.balance);
+            } catch (error) {
+                console.error('Error al obtener el balance:', error);
+            }
+        }
+
+        if (wallet.address) {
+            getAccountInfo();
+        }
+    }, [wallet]);
 
     const handleBack = () => {
         navigation.goBack();
@@ -58,7 +68,7 @@ export default function Invest() {
             return;
         }
 
-        if (parseFloat(investmentAmount) > userBalance) {
+        if (parseFloat(investmentAmount) > balance) {
             Alert.alert('Insufficient Balance', 'You don\'t have enough funds for this investment');
             return;
         }
@@ -69,12 +79,12 @@ export default function Invest() {
             `Invest $${investmentAmount} in ${selectedPool}?`,
             [
                 { text: 'Cancel', style: 'cancel' },
-                { 
-                    text: 'Confirm', 
+                {
+                    text: 'Confirm',
                     onPress: () => {
                         Alert.alert('Success', `You've invested $${investmentAmount} in ${selectedPool}`);
                         navigation.goBack();
-                    } 
+                    }
                 }
             ]
         );
@@ -86,14 +96,14 @@ export default function Invest() {
             <Header showBackButton={true} onBackPress={handleBack} />
 
             {/* Main Content */}
-            <ScrollView 
+            <ScrollView
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
             >
                 {/* Balance Card */}
                 <View style={styles.balanceCard}>
                     <Text style={styles.balanceLabel}>AVAILABLE BALANCE</Text>
-                    <Text style={styles.balanceAmount}>{userBalance.toFixed(2)} USD</Text>
+                    <Text style={styles.balanceAmount}>{balance.toFixed(2)} USD</Text>
                 </View>
 
                 {/* Investment Input */}
@@ -110,9 +120,9 @@ export default function Invest() {
                             onChangeText={setInvestmentAmount}
                             selectionColor="#FFFFE3"
                         />
-                        <TouchableOpacity 
+                        <TouchableOpacity
                             style={styles.maxButton}
-                            onPress={() => setInvestmentAmount(userBalance.toString())}
+                            onPress={() => setInvestmentAmount(balance.toString())}
                         >
                             <Text style={styles.maxButtonText}>MAX</Text>
                         </TouchableOpacity>
@@ -136,10 +146,10 @@ export default function Invest() {
                 )}
 
                 {/* Invest Button */}
-                <TouchableOpacity 
+                <TouchableOpacity
                     style={[
                         styles.investButton,
-                        (!investmentAmount || isNaN(investmentAmount) || parseFloat(investmentAmount) <= 0) && 
+                        (!investmentAmount || isNaN(investmentAmount) || parseFloat(investmentAmount) <= 0) &&
                         styles.disabledButton
                     ]}
                     onPress={handleInvest}
@@ -153,8 +163,8 @@ export default function Invest() {
                     Investments are subject to market risks. Past performance is not indicative of future results.
                 </Text>
             </ScrollView>
-            
-            <BottomMenu/>
+
+            <BottomMenu />
         </SafeAreaView>
     );
 }

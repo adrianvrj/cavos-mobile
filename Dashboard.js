@@ -1,20 +1,27 @@
-import React from 'react';
-import { 
-  StyleSheet, 
-  Text, 
-  View, 
-  TouchableOpacity, 
-  SafeAreaView, 
-  ScrollView, 
-  Image,
-  Dimensions,
-  Platform
+import React, { useState, useEffect } from 'react';
+import {
+    StyleSheet,
+    Text,
+    View,
+    TouchableOpacity,
+    SafeAreaView,
+    ScrollView,
+    Image,
+    Dimensions,
+    Platform,
+    Alert,
+    Modal,
+    ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import * as Font from 'expo-font';
 import { useFonts, JetBrainsMono_400Regular } from '@expo-google-fonts/jetbrains-mono';
 import BottomMenu from './components/BottomMenu';
 import Header from './components/Header';
+import { getWalletBalance } from './lib/utils';
+import { supabase } from './lib/supabaseClient';
+import { userIdAtom, useUserStore } from './atoms/userId';
+import { useWallet } from './atoms/wallet';
 
 const { width, height } = Dimensions.get('window');
 
@@ -23,22 +30,55 @@ const verticalScale = size => height / 812 * size;
 const moderateScale = (size, factor = 0.5) => size + (scale(size) - size) * factor;
 
 export default function Dashboard() {
+    const [balance, setBalance] = useState(0);
+    const [transaction, setTransactions] = useState([]);
+    const wallet = useWallet((state) => state.wallet);
+    const userId = useUserStore((state) => state.userId);
     const navigation = useNavigation();
+    const [isLoading, setIsLoading] = useState(false);
 
-    const [fontsLoaded] = Font.useFonts({
+    Font.useFonts({
         'Satoshi-Variable': require('./assets/fonts/Satoshi-Variable.ttf'),
     });
 
-    const [googleFontsLoaded] = useFonts({
+    useFonts({
         JetBrainsMono_400Regular,
     });
 
-    if (!fontsLoaded || !googleFontsLoaded) {
-        return null; // or a loading spinner
-    }
-
     Text.defaultProps = Text.defaultProps || {};
     Text.defaultProps.style = { fontFamily: 'Satoshi-Variable' };
+
+    useEffect(() => {
+        async function getAccountInfo() {
+            try {
+                setIsLoading(true);
+                const newBalance = await getWalletBalance(wallet.address);
+                setBalance(newBalance.balance);
+                console.log('Balance:', newBalance.balance);
+                const { data, error } = await supabase
+                    .from('transaction')
+                    .select('*')
+                    .eq('uid', userId)
+                    .order('created_at', { ascending: false });
+
+                if (error) {
+                    console.error('Supabase read error:', error);
+                    Alert.alert('Error reading from database');
+                    return;
+                }
+
+                setTransactions(data);
+            } catch (error) {
+                console.error('Error al obtener el balance:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        }
+
+        if (wallet.address) {
+            getAccountInfo();
+        }
+    }, [wallet]);
 
     const goToBuy = () => {
         navigation.navigate('Buy');
@@ -50,10 +90,25 @@ export default function Dashboard() {
 
     return (
         <SafeAreaView style={styles.container}>
-            {/* Header with Logout and Logo */}
-            <Header/>
+            {/* Loading Modal */}
+            {isLoading && (
+                <Modal
+                    transparent={true}
+                    animationType="fade"
+                    visible={isLoading}
+                    onRequestClose={() => { }}
+                >
+                    <View style={styles.loadingOverlay}>
+                        <View style={styles.loadingContainer}>
+                            <ActivityIndicator size="large" color="#FFFFE3" />
+                            <Text style={styles.loadingText}>Loading...</Text>
+                        </View>
+                    </View>
+                </Modal>
+            )}
 
-            {/* Card Preview */}
+            <Header />
+
             <View style={styles.cardContainer}>
                 <Text style={styles.cardText}>Coming soon...</Text>
                 <Image
@@ -63,13 +118,11 @@ export default function Dashboard() {
                 />
             </View>
 
-            {/* Balance Section */}
             <View style={styles.balanceSection}>
                 <Text style={styles.balanceLabel}>YOUR BALANCE</Text>
-                <Text style={styles.balanceAmount}>100.00 USD</Text>
+                <Text style={styles.balanceAmount}>{balance.toFixed(2)} USD</Text>
             </View>
 
-            {/* Action Buttons */}
             <View style={styles.actionButtons}>
                 <TouchableOpacity style={styles.buyButton} onPress={goToBuy}>
                     <Text style={styles.buyButtonText}>Buy</Text>
@@ -79,53 +132,52 @@ export default function Dashboard() {
                 </TouchableOpacity>
             </View>
 
-            {/* Transactions Section */}
             <View style={styles.transactionsSection}>
                 <Text style={styles.transactionsTitle}>TRANSACTIONS</Text>
 
-                <ScrollView 
-                  style={styles.transactionsList}
-                  contentContainerStyle={styles.transactionsContent}
-                  showsVerticalScrollIndicator={false}
+                <ScrollView
+                    style={styles.transactionsList}
+                    contentContainerStyle={styles.transactionsContent}
+                    showsVerticalScrollIndicator={false}
                 >
-                    {/* Transaction 1 */}
-                    <View style={styles.transactionItem}>
-                        <View style={styles.transactionLeft}>
-                            <Text style={styles.transactionType}>Invest</Text>
-                            <Text style={styles.transactionDetail}>Vesu Pool</Text>
+                    {transaction.map((tx, index) => (
+                        <View key={index} style={styles.transactionItem}>
+                            <View style={styles.transactionLeft}>
+                                <Text style={styles.transactionType}>{tx.type}</Text>
+                                <Text style={styles.transactionDetail}>
+                                    {tx.type === 'Deposit' || tx.type === 'Account Creation'
+                                        ? tx.uid.slice(0, 4) + '...' + tx.uid.slice(-4)
+                                        : 'Vesu Pool'}
+                                </Text>
+                            </View>
+                            <View style={styles.transactionRight}>
+                                <Text
+                                    style={
+                                        tx.type === 'Deposit'
+                                            ? styles.transactionAmountPositive
+                                            : styles.transactionAmountNegative
+                                    }
+                                >
+                                    {tx.type === 'Deposit' ? '+' : '-'}
+                                    {tx.amount.toFixed(2)} USD
+                                </Text>
+                                <Text style={styles.transactionDate}>
+                                    {new Date(tx.created_at).toLocaleString(undefined, {
+                                        year: 'numeric',
+                                        month: 'short',
+                                        day: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                        hour12: false,
+                                    })}
+                                </Text>
+                            </View>
                         </View>
-                        <View style={styles.transactionRight}>
-                            <Text style={styles.transactionAmountNegative}>-100.00 USDC</Text>
-                            <Text style={styles.transactionDate}>30-09-2025 10:00am</Text>
-                        </View>
-                    </View>
-
-                    {/* Transaction 2 */}
-                    <View style={styles.transactionItem}>
-                        <View style={styles.transactionLeft}>
-                            <Text style={styles.transactionType}>Deposit</Text>
-                            <Text style={styles.transactionDetail}>0x9f...0976</Text>
-                        </View>
-                        <View style={styles.transactionRight}>
-                            <Text style={styles.transactionAmountPositive}>+200.00 USDC</Text>
-                            <Text style={styles.transactionDate}>30-09-2025 10:00am</Text>
-                        </View>
-                    </View>
-
-                    {/* Transaction 3 */}
-                    <View style={styles.transactionItem}>
-                        <View style={styles.transactionLeft}>
-                            <Text style={styles.transactionType}>Account Creation</Text>
-                            <Text style={styles.transactionDetail}>0x12...9878</Text>
-                        </View>
-                        <View style={styles.transactionRight}>
-                            <Text style={styles.transactionAmountNegative}>-10.00 USDC</Text>
-                            <Text style={styles.transactionDate}>30-09-2025 10:00am</Text>
-                        </View>
-                    </View>
+                    ))}
                 </ScrollView>
             </View>
-            <BottomMenu/>
+
+            <BottomMenu />
         </SafeAreaView>
     );
 }
@@ -147,7 +199,9 @@ const styles = StyleSheet.create({
         position: 'relative',
         overflow: 'hidden',
         marginHorizontal: width * 0.20,
-        marginTop: moderateScale(20)
+        marginTop: moderateScale(20),
+        borderWidth: 1,
+        borderColor: 'FFFFE3',
     },
     cardText: {
         color: '#FFFFE3',
@@ -222,7 +276,7 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     transactionsContent: {
-        paddingBottom: verticalScale(80), // Space for bottom menu
+        paddingBottom: verticalScale(80),
     },
     transactionItem: {
         flexDirection: 'row',
@@ -267,5 +321,27 @@ const styles = StyleSheet.create({
         color: '#555',
         fontSize: moderateScale(14),
         fontFamily: 'JetBrainsMono_400Regular'
+    },
+    loadingOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        position: 'absolute',
+        width: '100%',
+        height: '100%',
+        zIndex: 999,
+    },
+    loadingContainer: {
+        backgroundColor: '#11110E',
+        padding: 20,
+        borderRadius: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    loadingText: {
+        color: '#FFFFE3',
+        marginTop: 10,
+        fontSize: 16,
     },
 });
