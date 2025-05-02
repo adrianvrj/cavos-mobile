@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { LogOut, TrendingUp, DollarSign, Percent } from 'lucide-react-native';
+import Icon from 'react-native-vector-icons/Ionicons';
 import * as Font from 'expo-font';
 import { useFonts, JetBrainsMono_400Regular } from '@expo-google-fonts/jetbrains-mono';
 import BottomMenu from './components/BottomMenu';
@@ -25,11 +25,10 @@ export default function Investments() {
         navigation.navigate('Invest');
     };
 
-
     return (
         <SafeAreaView style={styles.container}>
             {/* Header with Logout and Logo */}
-            <Header/>
+            <Header />
 
             {/* Investment Summary Card */}
             <View style={styles.summaryCard}>
@@ -38,7 +37,7 @@ export default function Investments() {
                 <View style={styles.summaryRow}>
                     <View style={styles.summaryItem}>
                         <View style={styles.iconContainer}>
-                            <TrendingUp color="#FFFFE3" size={20} />
+                            <Icon name="trending-up-outline" color="#FFFFE3" size={20} />
                         </View>
                         <Text style={styles.summaryLabel}>Total Invested</Text>
                         <Text style={styles.summaryValue}>500.00 USDC</Text>
@@ -46,7 +45,7 @@ export default function Investments() {
                     
                     <View style={styles.summaryItem}>
                         <View style={styles.iconContainer}>
-                            <DollarSign color="#FFFFE3" size={20} />
+                            <Icon name="cash-outline" color="#FFFFE3" size={20} />
                         </View>
                         <Text style={styles.summaryLabel}>Rewards</Text>
                         <Text style={styles.summaryValue}>25.50 USDC</Text>
@@ -54,7 +53,7 @@ export default function Investments() {
                     
                     <View style={styles.summaryItem}>
                         <View style={styles.iconContainer}>
-                            <Percent color="#FFFFE3" size={20} />
+                            <Icon name="stats-chart-outline" color="#FFFFE3" size={20} />
                         </View>
                         <Text style={styles.summaryLabel}>Current APY</Text>
                         <Text style={styles.summaryValue}>5.1%</Text>

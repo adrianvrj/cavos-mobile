@@ -15,8 +15,7 @@ import { useFonts, JetBrainsMono_400Regular } from '@expo-google-fonts/jetbrains
 import Header from '../../components/Header';
 import OTPInputView from '@twotalltotems/react-native-otp-input';
 import { supabase } from '../../lib/supabaseClient';
-import { useAtom } from 'jotai';
-import { userIdAtom } from '../../atoms/userId';
+import { useUserStore } from '../../atoms/userId';
 
 const { width, height } = Dimensions.get('window');
 
@@ -32,7 +31,7 @@ export default function PhoneOTP() {
     const [timer, setTimer] = useState(30);
     const [resendEnabled, setResendEnabled] = useState(false);
     const otpInputRef = useRef(null);
-    const [, setUserId] = useAtom(userIdAtom);
+    const setUserId = useUserStore((state) => state.setUserId)
 
     const [fontsLoaded] = Font.useFonts({
         'Satoshi-Variable': require('../../assets/fonts/Satoshi-Variable.ttf'),
@@ -42,23 +41,19 @@ export default function PhoneOTP() {
         JetBrainsMono_400Regular,
     });
 
-    if (!fontsLoaded || !googleFontsLoaded) {
-        return null;
-    }
-
     Text.defaultProps = Text.defaultProps || {};
     Text.defaultProps.style = { fontFamily: 'Satoshi-Variable' };
 
-    // useEffect(() => {
-    //     if (timer > 0 && !resendEnabled) {
-    //         const interval = setInterval(() => {
-    //             setTimer(timer - 1);
-    //         }, 1000);
-    //         return () => clearInterval(interval);
-    //     } else if (timer === 0) {
-    //         setResendEnabled(true);
-    //     }
-    // }, [timer, resendEnabled]);
+    useEffect(() => {
+        if (timer > 0 && !resendEnabled) {
+            const interval = setInterval(() => {
+                setTimer(timer - 1);
+            }, 1000);
+            return () => clearInterval(interval);
+        } else if (timer === 0) {
+            setResendEnabled(true);
+        }
+    }, [timer, resendEnabled]);
 
     const handleVerify = async (code) => {
         const { data, error } = await supabase.auth.verifyOtp({
@@ -70,10 +65,8 @@ export default function PhoneOTP() {
         if (error) {
             Alert.alert('OTP verification failed:', error.message);
         } else {
-            console.log('OTP verified, user signed in!');
             if (data?.user) {
                 setUserId(data.user.id);
-                console.log(data.user.id);
             } else {
                 Alert.alert("Something went wrong, please try again.")
             }
@@ -82,13 +75,13 @@ export default function PhoneOTP() {
         }
     };
 
-    const handleResend = () => {
+    const handleResend = async () => {
         setTimer(30);
         setResendEnabled(false);
         setOtp('');
-        if (otpInputRef.current) {
-            otpInputRef.current.clear();
-        }
+        const { data, error } = await supabase.auth.signInWithOtp({
+            phone: countryCode + phoneNumber,
+        });
         Alert.alert('Code Sent', 'A new verification code has been sent to your phone');
     };
 

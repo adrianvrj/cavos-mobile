@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
-import { Home, TrendingUp, UserPlus } from 'lucide-react-native';
+import Icon from 'react-native-vector-icons/Ionicons'; // Importa la librería de íconos
 import { useNavigation } from '@react-navigation/native';
 
 export default function BottomMenu() {
@@ -21,15 +21,15 @@ export default function BottomMenu() {
   return (
     <View style={styles.menuContainer}>
       <TouchableOpacity style={styles.menuItem} onPress={navigateToInvestments}>
-        <TrendingUp color="#FFFFE3" size={24} />
+        <Icon name="wallet-outline" size={24} color="#FFFFE3" />
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.menuItem} onPress={navigateToHome}>
-        <Home color="#FFFFE3" size={24} />
+        <Icon name="home-outline" size={24} color="#FFFFE3" />
       </TouchableOpacity>
-      
+
       <TouchableOpacity style={styles.menuItem} onPress={navigateToReferral}>
-        <UserPlus color="#FFFFE3" size={24} />
+        <Icon name="people-outline" size={24} color="#FFFFE3" />
       </TouchableOpacity>
     </View>
   );

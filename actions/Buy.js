@@ -15,7 +15,8 @@ import * as Font from 'expo-font';
 import { useFonts, JetBrainsMono_400Regular } from '@expo-google-fonts/jetbrains-mono';
 import BottomMenu from '../components/BottomMenu';
 import Header from '../components/Header';
-import { MaterialIcons, AntDesign } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
+import { useWallet } from '../atoms/wallet';
 
 const { width, height } = Dimensions.get('window');
 
@@ -24,7 +25,7 @@ const verticalScale = size => height / 812 * size;
 const moderateScale = (size, factor = 0.5) => size + (scale(size) - size) * factor;
 
 export default function Buy() {
-    const navigation = useNavigation();
+    const wallet = useWallet((state) => state.wallet);
 
     const [fontsLoaded] = Font.useFonts({
         'Satoshi-Variable': require('../assets/fonts/Satoshi-Variable.ttf'),
@@ -42,7 +43,7 @@ export default function Buy() {
     Text.defaultProps.style = { fontFamily: 'Satoshi-Variable' };
 
     // Sample wallet data - in a real app this would come from your backend
-    const walletAddress = "0x71C7656EC7ab88b098defB751B7401B5f6d8976F";
+    const walletAddress = wallet.address.slice(0, 2) + '0' + wallet.address.slice(2);
     const supportedNetworks = ["Starknet"];
     const minimumDeposit = "100.00 USDC";
 
@@ -149,6 +150,11 @@ const styles = StyleSheet.create({
     subtitle: {
         color: '#555',
         fontSize: moderateScale(16),
+    },
+    sectionTitle: {
+        color: '#FFFFE3',
+        marginBottom: 10,
+        fontWeight: 'bold',
     },
     card: {
         backgroundColor: '#000',
