@@ -20,8 +20,9 @@ import BottomMenu from './components/BottomMenu';
 import Header from './components/Header';
 import { getWalletBalance } from './lib/utils';
 import { supabase } from './lib/supabaseClient';
-import { userIdAtom, useUserStore } from './atoms/userId';
+import { useUserStore } from './atoms/userId';
 import { useWallet } from './atoms/wallet';
+import { Linking } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
 
@@ -54,7 +55,6 @@ export default function Dashboard() {
                 setIsLoading(true);
                 const newBalance = await getWalletBalance(wallet.address);
                 setBalance(newBalance.balance);
-                console.log('Balance:', newBalance.balance);
                 const { data, error } = await supabase
                     .from('transaction')
                     .select('*')
@@ -143,12 +143,23 @@ export default function Dashboard() {
                     {transaction.map((tx, index) => (
                         <View key={index} style={styles.transactionItem}>
                             <View style={styles.transactionLeft}>
-                                <Text style={styles.transactionType}>{tx.type}</Text>
-                                <Text style={styles.transactionDetail}>
-                                    {tx.type === 'Deposit' || tx.type === 'Account Creation'
-                                        ? tx.uid.slice(0, 4) + '...' + tx.uid.slice(-4)
-                                        : 'Vesu Pool'}
-                                </Text>
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        const url = tx.type === 'Account Creation'
+                                            ? ``
+                                            : `https://voyager.online/tx/${tx.tx_hash}`;
+                                        Linking.openURL(url).catch((err) =>
+                                            console.error('Failed to open URL:', err)
+                                        );
+                                    }}
+                                >
+                                    <Text style={styles.transactionType}>{tx.type}</Text>
+                                    <Text style={styles.transactionDetail}>
+                                        {tx.type === 'Account Creation'
+                                            ? tx.uid.slice(0, 4) + '...' + tx.uid.slice(-4)
+                                            : tx.tx_hash.slice(0, 4) + '...' + tx.tx_hash.slice(-4)}
+                                    </Text>
+                                </TouchableOpacity>
                             </View>
                             <View style={styles.transactionRight}>
                                 <Text
