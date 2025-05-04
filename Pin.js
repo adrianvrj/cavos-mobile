@@ -17,8 +17,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { supabase } from './lib/supabaseClient';
 import { wallet_provider_api, WALLET_PROVIDER_TOKEN } from './lib/constants';
 import axios from 'axios';
-import { decryptPin, decryptSecretWithPin, encryptPin } from './lib/utils';
-import { useWallet, walletAtom } from './atoms/wallet';
+import { decryptPin, encryptPin } from './lib/utils';
+import { useWallet } from './atoms/wallet';
 import { useUserStore } from './atoms/userId';
 
 const { width, height } = Dimensions.get('window');
@@ -110,7 +110,7 @@ export default function Pin() {
     const createWallet = async (pinP) => {
         try {
             const response = await axios.post(
-                wallet_provider_api,
+                wallet_provider_api + 'wallet',
                 { pin: pinP },
                 {
                     headers: {
@@ -121,7 +121,8 @@ export default function Pin() {
             );
             return response.data;
         } catch (err) {
-            Alert.alert("Error generating wallet: " + err);
+            console.error('Error creating wallet:', err);
+            return null;
         }
     };
 
@@ -177,6 +178,7 @@ export default function Pin() {
                     public_key: wallet_details.public_key,
                     private_key: wallet_details.private_key,
                     pin: hashedPin,
+                    deployed: false,
                 });
 
                 Alert.alert("Account setup successful!", "", [

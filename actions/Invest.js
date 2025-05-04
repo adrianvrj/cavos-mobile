@@ -9,7 +9,9 @@ import {
     TextInput,
     Dimensions,
     Platform,
-    Alert
+    Alert,
+    Modal,
+    ActivityIndicator
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import * as Font from 'expo-font';
@@ -18,6 +20,9 @@ import BottomMenu from '../components/BottomMenu';
 import Header from '../components/Header';
 import { useWallet } from '../atoms/wallet';
 import { getWalletBalance } from '../lib/utils';
+import axios from 'axios';
+import { wallet_provider_api, WALLET_PROVIDER_TOKEN } from '../lib/constants';
+import { supabase } from '../lib/supabaseClient';
 
 const { width, height } = Dimensions.get('window');
 
@@ -31,12 +36,13 @@ export default function Invest() {
     const [selectedPool, setSelectedPool] = useState('Vesu Pool');
     const [balance, setBalance] = useState(0);
     const wallet = useWallet((state) => state.wallet);
+    const [isLoading, setIsLoading] = useState(false);
 
-    const [fontsLoaded] = Font.useFonts({
+    Font.useFonts({
         'Satoshi-Variable': require('../assets/fonts/Satoshi-Variable.ttf'),
     });
 
-    const [googleFontsLoaded] = useFonts({
+    useFonts({
         JetBrainsMono_400Regular,
     });
 
@@ -62,6 +68,38 @@ export default function Invest() {
         navigation.goBack();
     };
 
+    const handleChangeAmount = (text) => {
+        const sanitized = text.replace(',', '.');
+        setInvestmentAmount(sanitized);
+    };
+
+
+    const createPosition = async () => {
+        try {
+            const response = await axios.post(
+                wallet_provider_api + 'position',
+                {
+                    amount: investmentAmount,
+                    address: wallet.address,
+                    publicKey: wallet.public_key,
+                    hashedPk: wallet.private_key,
+                    hashedPin: wallet.pin,
+                    deploymentData: wallet.deployment_data,
+                    deployed: wallet.deployed,
+                },
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${WALLET_PROVIDER_TOKEN}`,
+                    },
+                }
+            );
+            return response.data;
+        } catch (err) {
+            Alert.alert("Error generating wallet: " + err);
+        }
+    }
+
     const handleInvest = () => {
         if (!investmentAmount || isNaN(investmentAmount) || parseFloat(investmentAmount) <= 0) {
             Alert.alert('Invalid Amount', 'Please enter a valid investment amount');
@@ -81,9 +119,34 @@ export default function Invest() {
                 { text: 'Cancel', style: 'cancel' },
                 {
                     text: 'Confirm',
-                    onPress: () => {
-                        Alert.alert('Success', `You've invested $${investmentAmount} in ${selectedPool}`);
-                        navigation.goBack();
+                    onPress: async () => {
+                        setIsLoading(true);
+                        const positionTx = await createPosition();
+                        if (positionTx.result == null) {
+                            Alert.alert('Error creating position');
+                            return;
+                        }
+
+                        const { error: txError } = await supabase
+                            .from('transaction')
+                            .insert([
+                                {
+                                    uid: wallet.uid,
+                                    type: "Invest",
+                                    amount: investmentAmount,
+                                    tx_hash: positionTx.result,
+                                },
+                            ]);
+
+                        if (txError) {
+                            console.error('Insert error:', txError);
+                            Alert.alert('Error saving transaction to database');
+                            return;
+                        }
+                        setIsLoading(false);
+
+                        Alert.alert('Success', `You've invested $${investmentAmount} in Vesu Protocol`);
+                        navigation.navigate('Dashboard');
                     }
                 }
             ]
@@ -92,6 +155,21 @@ export default function Invest() {
 
     return (
         <SafeAreaView style={styles.container}>
+            {isLoading && (
+                <Modal
+                    transparent={true}
+                    animationType="fade"
+                    visible={isLoading}
+                    onRequestClose={() => { }}
+                >
+                    <View style={styles.loadingOverlay}>
+                        <View style={styles.loadingContainer}>
+                            <ActivityIndicator size="large" color="#FFFFE3" />
+                            <Text style={styles.loadingText}>Creating postion on Vesu...</Text>
+                        </View>
+                    </View>
+                </Modal>
+            )}
             {/* Header with Back Button */}
             <Header showBackButton={true} onBackPress={handleBack} />
 
@@ -117,8 +195,9 @@ export default function Invest() {
                             placeholderTextColor="#555"
                             keyboardType="decimal-pad"
                             value={investmentAmount}
-                            onChangeText={setInvestmentAmount}
+                            onChangeText={handleChangeAmount}
                             selectionColor="#FFFFE3"
+                            step="0.01"
                         />
                         <TouchableOpacity
                             style={styles.maxButton}
@@ -136,12 +215,12 @@ export default function Invest() {
                             <Text style={styles.summaryLabel}>Investment Amount</Text>
                             <Text style={styles.summaryValue}>${parseFloat(investmentAmount).toFixed(2)}</Text>
                         </View>
-                        <View style={styles.summaryRow}>
+                        {/* <View style={styles.summaryRow}>
                             <Text style={styles.summaryLabel}>Estimated APY</Text>
                             <Text style={styles.summaryValue}>
                                 {investmentPools.find(p => p.name === selectedPool)?.apy}
                             </Text>
-                        </View>
+                        </View> */}
                     </View>
                 )}
 
@@ -324,5 +403,27 @@ const styles = StyleSheet.create({
         fontSize: moderateScale(12),
         textAlign: 'center',
         lineHeight: moderateScale(18),
+    },
+    loadingOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        position: 'absolute',
+        width: '100%',
+        height: '100%',
+        zIndex: 999,
+    },
+    loadingContainer: {
+        backgroundColor: '#11110E',
+        padding: 20,
+        borderRadius: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    loadingText: {
+        color: '#FFFFE3',
+        marginTop: 10,
+        fontSize: 16,
     },
 });
