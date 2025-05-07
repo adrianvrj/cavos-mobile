@@ -10,8 +10,7 @@ import {
     Dimensions,
     Platform,
     Alert,
-    Modal,
-    ActivityIndicator,
+    Linking,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import * as Font from 'expo-font';
@@ -22,7 +21,7 @@ import { getWalletBalance } from './lib/utils';
 import { supabase } from './lib/supabaseClient';
 import { useUserStore } from './atoms/userId';
 import { useWallet } from './atoms/wallet';
-import { Linking } from 'react-native';
+import LoadingModal from './modals/LoadingModal';
 
 const { width, height } = Dimensions.get('window');
 
@@ -92,19 +91,7 @@ export default function Dashboard() {
         <SafeAreaView style={styles.container}>
             {/* Loading Modal */}
             {isLoading && (
-                <Modal
-                    transparent={true}
-                    animationType="fade"
-                    visible={isLoading}
-                    onRequestClose={() => { }}
-                >
-                    <View style={styles.loadingOverlay}>
-                        <View style={styles.loadingContainer}>
-                            <ActivityIndicator size="large" color="#FFFFE3" />
-                            <Text style={styles.loadingText}>Loading...</Text>
-                        </View>
-                    </View>
-                </Modal>
+                <LoadingModal />
             )}
 
             <Header />
@@ -127,6 +114,9 @@ export default function Dashboard() {
                 <TouchableOpacity style={styles.buyButton} onPress={goToBuy}>
                     <Text style={styles.buyButtonText}>Buy</Text>
                 </TouchableOpacity>
+                <TouchableOpacity style={styles.sendButton} onPress={() => navigation.navigate('Send')}>
+                    <Text style={styles.sendButtonText}>Send</Text>
+                </TouchableOpacity>
                 <TouchableOpacity style={styles.investButton} onPress={goToInvestment}>
                     <Text style={styles.investButtonText}>Invest</Text>
                 </TouchableOpacity>
@@ -146,8 +136,8 @@ export default function Dashboard() {
                                 <TouchableOpacity
                                     onPress={() => {
                                         const url = tx.type === 'Account Creation'
-                                            ? ``
-                                            : `https://voyager.online/tx/${tx.tx_hash}`;
+                                            ? `https://explorer.example.com/account/${tx.uid}`
+                                            : `https://explorer.example.com/tx/${tx.tx_hash}`;
                                         Linking.openURL(url).catch((err) =>
                                             console.error('Failed to open URL:', err)
                                         );
@@ -246,7 +236,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         marginBottom: verticalScale(40),
-        marginHorizontal: width * 0.1,
+        marginHorizontal: width * 0.05, // Ajustado para acomodar tres botones
     },
     buyButton: {
         flex: 1,
@@ -267,10 +257,22 @@ const styles = StyleSheet.create({
         backgroundColor: '#FFFFE3',
         alignItems: 'center',
         justifyContent: 'center',
-        marginLeft: moderateScale(10),
+        marginHorizontal: moderateScale(10),
     },
     investButtonText: {
         color: '#11110E',
+        fontSize: moderateScale(16),
+    },
+    sendButton: {
+        flex: 1,
+        paddingVertical: verticalScale(12),
+        borderWidth: 1,
+        borderColor: '#FFFFE3',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    sendButtonText: {
+        color: '#FFFFE3',
         fontSize: moderateScale(16),
     },
     transactionsSection: {

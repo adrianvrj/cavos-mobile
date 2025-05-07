@@ -1,4 +1,3 @@
-import React from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -6,15 +5,24 @@ import * as Font from 'expo-font';
 import { useFonts, JetBrainsMono_400Regular } from '@expo-google-fonts/jetbrains-mono';
 import BottomMenu from './components/BottomMenu';
 import Header from './components/Header';
+import { useWallet } from './atoms/wallet';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { wallet_provider_api, WALLET_PROVIDER_TOKEN } from './lib/constants';
+import LoadingModal from './modals/LoadingModal';
 
 export default function Investments() {
     const navigation = useNavigation();
+    const wallet = useWallet((state) => state.wallet);
+    const [isLoading, setIsLoading] = useState(false);
+    const [totalInvested, setTotalInvested] = useState(0);
+    const [apy, setApy] = useState(0);
 
-    const [fontsLoaded] = Font.useFonts({
+    Font.useFonts({
         'Satoshi-Variable': require('./assets/fonts/Satoshi-Variable.ttf'),
     });
 
-    const [googleFontsLoaded] = useFonts({
+    useFonts({
         JetBrainsMono_400Regular,
     });
 
@@ -25,41 +33,76 @@ export default function Investments() {
         navigation.navigate('Invest');
     };
 
+    useEffect(() => {
+        async function getAccountInfo() {
+            try {
+                setIsLoading(true);
+                const positionResponse = await axios.post(
+                    wallet_provider_api + 'vesu/positions',
+                    {
+                        address: wallet.address,
+                        pool: "Re7 USDC",
+                    },
+                    {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            Authorization: `Bearer ${WALLET_PROVIDER_TOKEN}`,
+                        },
+                    }
+                );
+                setApy(positionResponse.data.earnPositions[0].poolApy);
+                setTotalInvested(positionResponse.data.earnPositions[0].total_supplied);
+            } catch (error) {
+                console.error('Error fetching user positions', error);
+            } finally {
+                setIsLoading(false);
+            }
+        }
+
+        if (wallet.address) {
+            getAccountInfo();
+        }
+    }, [wallet]);
+
     return (
         <SafeAreaView style={styles.container}>
+            {isLoading && (
+                <LoadingModal />
+            )}
+
             {/* Header with Logout and Logo */}
             <Header />
 
             {/* Investment Summary Card */}
             <View style={styles.summaryCard}>
                 <Text style={styles.summaryTitle}>INVESTMENT SUMMARY</Text>
-                
+
                 <View style={styles.summaryRow}>
                     <View style={styles.summaryItem}>
                         <View style={styles.iconContainer}>
                             <Icon name="trending-up-outline" color="#FFFFE3" size={20} />
                         </View>
                         <Text style={styles.summaryLabel}>Total Invested</Text>
-                        <Text style={styles.summaryValue}>500.00 USDC</Text>
+                        <Text style={styles.summaryValue}>${totalInvested.toFixed(2)} USDC</Text>
                     </View>
-                    
-                    <View style={styles.summaryItem}>
+
+                    {/* <View style={styles.summaryItem}>
                         <View style={styles.iconContainer}>
                             <Icon name="cash-outline" color="#FFFFE3" size={20} />
                         </View>
                         <Text style={styles.summaryLabel}>Rewards</Text>
                         <Text style={styles.summaryValue}>25.50 USDC</Text>
-                    </View>
-                    
+                    </View> */}
+
                     <View style={styles.summaryItem}>
                         <View style={styles.iconContainer}>
                             <Icon name="stats-chart-outline" color="#FFFFE3" size={20} />
                         </View>
                         <Text style={styles.summaryLabel}>Current APY</Text>
-                        <Text style={styles.summaryValue}>5.1%</Text>
+                        <Text style={styles.summaryValue}>{apy.toFixed(2)}%</Text>
                     </View>
                 </View>
-                
+
                 <TouchableOpacity style={styles.claimButton}>
                     <Text style={styles.claimButtonText}>Claim Rewards</Text>
                 </TouchableOpacity>
