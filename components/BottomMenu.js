@@ -28,9 +28,9 @@ export default function BottomMenu() {
         <Icon name="home-outline" size={24} color="#FFFFE3" />
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.menuItem} onPress={navigateToReferral}>
+      {/* <TouchableOpacity style={styles.menuItem} onPress={navigateToReferral}>
         <Icon name="people-outline" size={24} color="#FFFFE3" />
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </View>
   );
 }

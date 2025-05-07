@@ -1,22 +1,22 @@
 import React from 'react';
-import { 
-  StyleSheet, 
-  Text, 
-  View, 
-  TouchableOpacity, 
-  SafeAreaView, 
-  ScrollView,
-  Dimensions,
-  Platform,
-  Alert
+import {
+    StyleSheet,
+    Text,
+    View,
+    TouchableOpacity,
+    SafeAreaView,
+    ScrollView,
+    Dimensions,
+    Platform,
+    Alert
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
 import * as Font from 'expo-font';
 import { useFonts, JetBrainsMono_400Regular } from '@expo-google-fonts/jetbrains-mono';
 import BottomMenu from '../components/BottomMenu';
 import Header from '../components/Header';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useWallet } from '../atoms/wallet';
+import * as Clipboard from 'expo-clipboard';
 
 const { width, height } = Dimensions.get('window');
 
@@ -42,14 +42,14 @@ export default function Buy() {
     Text.defaultProps = Text.defaultProps || {};
     Text.defaultProps.style = { fontFamily: 'Satoshi-Variable' };
 
-    // Sample wallet data - in a real app this would come from your backend
-    const walletAddress = wallet.address.slice(0, 2) + '0' + wallet.address.slice(2);
+    const walletAddress = wallet.address.startsWith('0x')
+        ? '0x' + wallet.address.slice(2).padStart(64, '0')
+        : '0x' + wallet.address.padStart(64, '0');
     const supportedNetworks = ["Starknet"];
     const minimumDeposit = "100.00 USDC";
 
     const handleCopyAddress = () => {
-        // In a real app, you would use Clipboard from 'expo-clipboard'
-        // Clipboard.setString(walletAddress);
+        Clipboard.setStringAsync(walletAddress);
         Alert.alert('Copied!', 'Wallet address copied to clipboard.');
     };
 
@@ -59,7 +59,7 @@ export default function Buy() {
             <Header showBackButton={true} />
 
             {/* Main Content */}
-            <ScrollView 
+            <ScrollView
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
             >
@@ -67,7 +67,7 @@ export default function Buy() {
                 {/* Wallet Address Card */}
                 <View style={styles.card}>
                     <Text style={styles.cardTitle}>YOUR DEPOSIT ADDRESS</Text>
-                    
+
                     <View style={styles.addressContainer}>
                         <Text style={styles.addressText} numberOfLines={1} ellipsizeMode="middle">
                             {walletAddress}
@@ -81,7 +81,7 @@ export default function Buy() {
                 {/* Important Notes */}
                 <View style={styles.notesContainer}>
                     <Text style={styles.sectionTitle}>IMPORTANT</Text>
-                    
+
                     <View style={styles.noteItem}>
                         <View style={styles.noteIcon}>
                             <MaterialIcons name="warning" size={moderateScale(20)} color="#F44336" />
@@ -90,7 +90,7 @@ export default function Buy() {
                             Only send from supported networks: {supportedNetworks.join(', ')}
                         </Text>
                     </View>
-                    
+
                     <View style={styles.noteItem}>
                         <View style={styles.noteIcon}>
                             <MaterialIcons name="warning" size={moderateScale(20)} color="#F44336" />
@@ -99,7 +99,7 @@ export default function Buy() {
                             Supported assets: USDC, USDT.
                         </Text>
                     </View>
-                    
+
                     <View style={styles.noteItem}>
                         <View style={styles.noteIcon}>
                             <MaterialIcons name="warning" size={moderateScale(20)} color="#F44336" />
@@ -122,8 +122,8 @@ export default function Buy() {
                     </View>
                 </View>
             </ScrollView>
-            
-            <BottomMenu/>
+
+            <BottomMenu />
         </SafeAreaView>
     );
 }
