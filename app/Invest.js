@@ -58,7 +58,7 @@ export default function Invest() {
             }
         }
 
-        if (wallet.address) {
+        if (wallet) {
             getAccountInfo();
         }
     }, [wallet]);

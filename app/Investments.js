@@ -59,7 +59,7 @@ export default function Investments() {
             }
         }
 
-        if (wallet.address) {
+        if (wallet) {
             getAccountInfo();
         }
     }, [wallet]);

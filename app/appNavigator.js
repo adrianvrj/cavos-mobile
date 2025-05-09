@@ -48,7 +48,7 @@ export default function AppNavigator() {
     <Providers>
       <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName={initialRoute}>
         <Stack.Screen name="Login" component={Login} />
-        <Stack.Screen name="Pin" component={Pin} />
+        <Stack.Screen name="Pin" component={Pin} initialParams={false} />
         <Stack.Screen name="Dashboard" component={Dashboard} />
         <Stack.Screen name="Investments" component={Investments} />
         <Stack.Screen name="Referral" component={Referral} />

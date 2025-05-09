@@ -52,7 +52,6 @@ export default function PhoneLogin() {
         const { data, error } = await supabase.auth.signInWithOtp({
             phone: countryCode + phoneNumber,
         });
-        console.error('Error signing in:', error);
         if (error) Alert.alert("Something went wrong, please try again");
         else navigation.navigate('PhoneOTP', { phoneNumber: `${countryCode}${phoneNumber}` });;
     };

@@ -58,7 +58,7 @@ export default function Send() {
             }
         }
 
-        if (wallet.address) {
+        if (wallet) {
             getAccountInfo();
         }
     }, [wallet]);
