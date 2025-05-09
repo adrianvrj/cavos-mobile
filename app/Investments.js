@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Image } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Image, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import * as Font from 'expo-font';
@@ -64,6 +64,54 @@ export default function Investments() {
         }
     }, [wallet]);
 
+    const handleClaimRewards = async () => {
+        setIsLoading(true);
+        try {
+            const response = await axios.post(
+                wallet_provider_api + 'vesu/positions/claim',
+                {
+                    address: wallet.address,
+                    hashedPk: wallet.private_key,
+                    hashedPin: wallet.pin,
+                },
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${WALLET_PROVIDER_TOKEN}`,
+                    },
+                }
+            );
+            console.log('Claim response:', response.data);
+            if (response.data.result == false) {
+                Alert.alert("No rewards available", "Come back in a few days to claim your rewards");
+            }
+            else if (response.data.amount !== null && response.data.result !== null) {
+                const { error: txError } = await supabase
+                    .from('transaction')
+                    .insert([
+                        {
+                            uid: wallet.uid,
+                            type: "Claim",
+                            amount: response.data.amount,
+                            tx_hash: response.data.result,
+                        },
+                    ]);
+
+                if (txError) {
+                    console.error('Insert error:', txError);
+                    Alert.alert('Error saving transaction to database');
+                    setIsLoading(false);
+                    return;
+                }
+                Alert.alert("Rewards Claimed!", `Total amount in USDC: ${response.data.amount}`)
+            }
+        } catch (error) {
+            console.error('Error claiming rewards', error);
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
     return (
         <SafeAreaView style={styles.container}>
             {isLoading && (
@@ -103,7 +151,7 @@ export default function Investments() {
                     </View>
                 </View>
 
-                <TouchableOpacity style={styles.claimButton}>
+                <TouchableOpacity style={styles.claimButton} onPress={handleClaimRewards}>
                     <Text style={styles.claimButtonText}>Claim Rewards</Text>
                 </TouchableOpacity>
             </View>
