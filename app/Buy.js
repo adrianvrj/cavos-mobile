@@ -12,8 +12,8 @@ import {
 } from 'react-native';
 import * as Font from 'expo-font';
 import { useFonts, JetBrainsMono_400Regular } from '@expo-google-fonts/jetbrains-mono';
-import BottomMenu from '../components/BottomMenu';
-import Header from '../components/Header';
+import BottomMenu from './components/BottomMenu';
+import Header from './components/Header';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useWallet } from '../atoms/wallet';
 import * as Clipboard from 'expo-clipboard';

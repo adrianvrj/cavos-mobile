@@ -1,15 +1,22 @@
-import React from 'react';
-import { View, TouchableOpacity, StyleSheet, Image } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
-import { useUserStore } from '../atoms/userId';
+import React from 'react';
+import { View, TouchableOpacity, StyleSheet, Image, Alert } from 'react-native';
+import Icon from 'react-native-vector-icons/Ionicons';
+import { useUserStore } from '../../atoms/userId';
+import { useWallet } from '../../atoms/wallet';
+import { supabase } from '../../lib/supabaseClient';
 
 export default function Header() {
     const navigation = useNavigation();
     const setUserId = useUserStore((state) => state.setUserId);
+    const setWallet = useWallet((state) => state.setWallet);
 
     const goToLogin = () => {
         navigation.navigate('Login');
+        setUserId(null);
+        setWallet(null);
+        supabase.auth.signOut();
+        Alert.alert('Logout', 'You have been logged out successfully.');
     };
 
     return (
@@ -17,7 +24,7 @@ export default function Header() {
             <View style={styles.emptySpace}></View>
             <View style={styles.logoContainer}>
                 <Image
-                    source={require('../assets/cavos-logo.png')}
+                    source={require('../../assets/cavos-logo.png')}
                     style={styles.logoStyle}
                 />
             </View>

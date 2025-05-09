@@ -12,7 +12,7 @@ import { useFonts, JetBrainsMono_400Regular } from '@expo-google-fonts/jetbrains
 export default function LoadingModal() {
 
     Font.useFonts({
-        'Satoshi-Variable': require('../assets/fonts/Satoshi-Variable.ttf'),
+        'Satoshi-Variable': require('../../assets/fonts/Satoshi-Variable.ttf'),
     });
 
     useFonts({
