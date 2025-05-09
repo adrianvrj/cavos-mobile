@@ -26,7 +26,7 @@ const moderateScale = (size, factor = 0.5) => size + (scale(size) - size) * fact
 export default function PhoneOTP() {
     const navigation = useNavigation();
     const route = useRoute();
-    const { phoneNumber } = route.params;
+    const { phoneNumber, isReset } = route.params;
     const [otp, setOtp] = useState('');
     const [timer, setTimer] = useState(30);
     const [resendEnabled, setResendEnabled] = useState(false);
@@ -43,6 +43,15 @@ export default function PhoneOTP() {
 
     Text.defaultProps = Text.defaultProps || {};
     Text.defaultProps.style = { fontFamily: 'Satoshi-Variable' };
+
+    useEffect(() => {
+        if (isReset) {
+            Alert.alert('Reset Password', 'Please enter the verification code sent to your phone.');
+            const { data, error } = supabase.auth.signInWithOtp({
+                phone: phoneNumber,
+            });
+        }
+    }, []);
 
     useEffect(() => {
         if (timer > 0 && !resendEnabled) {
@@ -70,8 +79,12 @@ export default function PhoneOTP() {
             } else {
                 Alert.alert("Something went wrong, please try again.")
             }
-            // Redirect to "Pin" or "Dashboard"
-            navigation.navigate('Pin');
+            if (isReset) {
+                navigation.navigate('Pin', { isReset: true });
+            }
+            else {
+                navigation.navigate('Pin', { isReset: false });
+            }
         }
     };
 

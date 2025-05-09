@@ -9,17 +9,18 @@ import {
     Platform,
     Alert
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import * as Font from 'expo-font';
 import { useFonts, JetBrainsMono_400Regular } from '@expo-google-fonts/jetbrains-mono';
 import { MaterialIcons } from '@expo/vector-icons';
 import { supabase } from '../../lib/supabaseClient';
 import { wallet_provider_api, WALLET_PROVIDER_TOKEN } from '../../lib/constants';
 import axios from 'axios';
-import { decryptPin, encryptPin } from '../../lib/utils';
+import { decryptPin, decryptSecretWithPin, encryptPin, encryptSecretWithPin } from '../../lib/utils';
 import { useWallet } from '../../atoms/wallet';
 import { useUserStore } from '../../atoms/userId';
 import Header from '../components/Header';
+import LoadingModal from '../components/LoadingModal';
 
 const { width, height } = Dimensions.get('window');
 
@@ -29,6 +30,8 @@ const moderateScale = (size, factor = 0.5) => size + (scale(size) - size) * fact
 
 export default function Pin() {
     const navigation = useNavigation();
+    const route = useRoute();
+    const { isReset } = route.params;
     const [pin, setPin] = useState('');
     const [error, setError] = useState(false);
     const [attempts, setAttempts] = useState(0);
@@ -36,6 +39,7 @@ export default function Pin() {
     const setWallet = useWallet((state) => state.setWallet);
     const [isNewUser, setIsNewUser] = useState(false);
     const [userData, setUserData] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
 
     const [fontsLoaded] = Font.useFonts({
         'Satoshi-Variable': require('../../assets/fonts/Satoshi-Variable.ttf'),
@@ -77,6 +81,9 @@ export default function Pin() {
         if (userId) {
             getAccountInfo();
         }
+        if (isReset) {
+            Alert.alert('Reset Pin', 'Please enter a new PIN');
+        }
     }, [userId]);
 
     const handleNumberPress = (number) => {
@@ -93,15 +100,16 @@ export default function Pin() {
         setPin(pin.slice(0, -1));
     };
 
-    const handleForgotPin = () => {
+    const handleForgotPin = async () => {
+        const phoneNumber = (await supabase.auth.getUser()).data.user.phone;
         Alert.alert(
             'Forgot PIN',
-            'Would you like to reset your PIN? This will require email verification.',
+            'Would you like to reset your PIN? This will require OTP verification.',
             [
                 { text: 'Cancel', style: 'cancel' },
                 {
                     text: 'Reset PIN',
-                    onPress: () => navigation.navigate('ResetPin')
+                    onPress: () => navigation.navigate('PhoneOTP', { phoneNumber: phoneNumber, isReset: true }),
                 }
             ]
         );
@@ -126,11 +134,51 @@ export default function Pin() {
         }
     };
 
+    const handleResetPin = async (pinP) => {
+        const newhashedPin = encryptPin(pinP);
+        const oldPk = decryptSecretWithPin(userData.private_key, decryptPin(userData.pin));
+        const newHashedPk = encryptSecretWithPin(pinP, oldPk);
+        setUserData(null);
+        setWallet(null);
+        const { error: updateError } = await supabase
+            .from('user_wallet')
+            .update({ pin: newhashedPin, private_key: newHashedPk })
+            .eq('uid', userId);
+        if (updateError) {
+            console.error('Update error:', updateError);
+            Alert.alert('Error updating PIN in database');
+            return;
+        }
+        const { data, error } = await supabase
+            .from('user_wallet')
+            .select('*')
+            .eq('uid', userId);
+
+        if (error) {
+            console.error('Supabase read error:', error);
+            Alert.alert('Error reading from database');
+            return;
+        }
+        setWallet(data[0]);
+        setUserData(data[0]);
+        setPin('');
+        Alert.alert("PIN reset successful!", "Input your new PIN again to sign in.", [
+            {
+                text: "Continue",
+                onPress: () => navigation.navigate('Pin', { isReset: false })
+            }
+        ]);
+    }
 
     const validatePin = async (pinP) => {
+        if (isReset && !isNewUser) {
+            handleResetPin(pinP);
+            return;
+        }
         const hashedPin = encryptPin(pinP);
         try {
             if (isNewUser) {
+                setIsLoading(true);
                 const wallet_details = await createWallet(hashedPin);
 
                 if (!wallet_details || !wallet_details.address) {
@@ -189,6 +237,7 @@ export default function Pin() {
                 ]);
             } else {
                 if (decryptPin(userData.pin) !== pinP) {
+                    setPin('');
                     Alert.alert("Wrong pin!");
                 }
                 else {
@@ -199,10 +248,17 @@ export default function Pin() {
         } catch (err) {
             console.error('Unexpected error in validatePin:', err);
         }
+        finally {  
+            setIsLoading(false);
+        }
     };
 
     return (
         <SafeAreaView style={styles.container}>
+            {/* Loading Indicator */}
+            {isLoading && (
+                <LoadingModal/>
+            )}
             {/* Header with Back Button */}
             <Header showBackButton={true} />
 
