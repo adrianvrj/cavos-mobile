@@ -8,7 +8,7 @@ export default function Login() {
   const navigation = useNavigation();
 
   const [fontsLoaded] = Font.useFonts({
-    'Satoshi-Variable': require('./assets/fonts/Satoshi-Variable.ttf'),
+    'Satoshi-Variable': require('../../assets/fonts/Satoshi-Variable.ttf'),
   });
 
   Text.defaultProps = Text.defaultProps || {};
@@ -26,7 +26,7 @@ export default function Login() {
     <SafeAreaView style={styles.container}>
       <View style={styles.logoContainer}>
         <Image
-          source={require('./assets/cavos-logo.png')}
+          source={require('../../assets/cavos-logo.png')}
         />
         <Text style={styles.logoText}>CAVOS</Text>
       </View>
@@ -40,22 +40,6 @@ export default function Login() {
       </View>
 
       <View style={styles.buttonContainer}>
-        {/* <TouchableOpacity style={[styles.button, styles.googleButton]}>
-          <Text style={styles.buttonText}>Continue with Google</Text>
-          <Image
-            source={require('./assets/google-icon.png')}
-            style={styles.buttonIcon}
-          />
-        </TouchableOpacity>
-
-        <TouchableOpacity style={[styles.button, styles.appleButton]} onPress={goToPin}>
-          <Text style={styles.appleButtonText}>Continue with Apple</Text>
-          <Image
-            source={require('./assets/apple-icon.png')}
-            style={styles.buttonIcon}
-          />
-        </TouchableOpacity> */}
-
         <TouchableOpacity style={[styles.button, styles.phoneButton]} onPress={goToPhoneLogin}>
           <Text style={styles.buttonText}>Continue with Phone Number</Text>
         </TouchableOpacity>

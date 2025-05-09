@@ -15,13 +15,13 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import * as Font from 'expo-font';
 import { useFonts, JetBrainsMono_400Regular } from '@expo-google-fonts/jetbrains-mono';
-import BottomMenu from './components/BottomMenu';
+import { getWalletBalance } from '../lib/utils';
+import { useWallet } from '../atoms/wallet';
+import { useUserStore } from '../atoms/userId';
+import { supabase } from '../lib/supabaseClient';
 import Header from './components/Header';
-import { getWalletBalance } from './lib/utils';
-import { supabase } from './lib/supabaseClient';
-import { useUserStore } from './atoms/userId';
-import { useWallet } from './atoms/wallet';
-import LoadingModal from './modals/LoadingModal';
+import LoadingModal from './components/LoadingModal';
+import BottomMenu from './components/BottomMenu';
 
 const { width, height } = Dimensions.get('window');
 
@@ -30,7 +30,7 @@ const verticalScale = size => height / 812 * size;
 const moderateScale = (size, factor = 0.5) => size + (scale(size) - size) * factor;
 
 export default function Dashboard() {
-    const [balance, setBalance] = useState(0);
+    const [balance, setBalance] = useState(0.000);
     const [transaction, setTransactions] = useState([]);
     const wallet = useWallet((state) => state.wallet);
     const userId = useUserStore((state) => state.userId);
@@ -38,7 +38,7 @@ export default function Dashboard() {
     const [isLoading, setIsLoading] = useState(false);
 
     Font.useFonts({
-        'Satoshi-Variable': require('./assets/fonts/Satoshi-Variable.ttf'),
+        'Satoshi-Variable': require('../assets/fonts/Satoshi-Variable.ttf'),
     });
 
     useFonts({
@@ -74,7 +74,7 @@ export default function Dashboard() {
             }
         }
 
-        if (wallet.address) {
+        if (wallet) {
             getAccountInfo();
         }
     }, [wallet]);
@@ -99,7 +99,7 @@ export default function Dashboard() {
             <View style={styles.cardContainer}>
                 <Text style={styles.cardText}>Coming soon...</Text>
                 <Image
-                    source={require('./assets/visa-logo.png')}
+                    source={require('../assets/visa-logo.png')}
                     style={styles.visaLogo}
                     resizeMode="contain"
                 />
@@ -136,8 +136,8 @@ export default function Dashboard() {
                                 <TouchableOpacity
                                     onPress={() => {
                                         const url = tx.type === 'Account Creation'
-                                            ? `https://explorer.example.com/account/${tx.uid}`
-                                            : `https://explorer.example.com/tx/${tx.tx_hash}`;
+                                            ? `https://voyager.online/contract/${wallet.address}`
+                                            : `https://voyager.online/tx/${tx.tx_hash}`;
                                         Linking.openURL(url).catch((err) =>
                                             console.error('Failed to open URL:', err)
                                         );
@@ -177,7 +177,6 @@ export default function Dashboard() {
                     ))}
                 </ScrollView>
             </View>
-
             <BottomMenu />
         </SafeAreaView>
     );

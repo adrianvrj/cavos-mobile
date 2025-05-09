@@ -14,9 +14,9 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import * as Font from 'expo-font';
 import { useFonts, JetBrainsMono_400Regular } from '@expo-google-fonts/jetbrains-mono';
-import BottomMenu from './components/BottomMenu';
-import Header from './components/Header';
 import { MaterialIcons } from '@expo/vector-icons';
+import Header from '../components/Header';
+import BottomMenu from '../components/BottomMenu';
 
 const { width, height } = Dimensions.get('window');
 
@@ -29,7 +29,7 @@ export default function Referral() {
     const navigation = useNavigation();
 
     const [fontsLoaded] = Font.useFonts({
-        'Satoshi-Variable': require('./assets/fonts/Satoshi-Variable.ttf'),
+        'Satoshi-Variable': require('../../assets/fonts/Satoshi-Variable.ttf'),
     });
 
     const [googleFontsLoaded] = useFonts({
@@ -67,7 +67,7 @@ export default function Referral() {
     return (
         <SafeAreaView style={styles.container}>
             {/* Header with Back Button and Logo */}
-            <Header showBackButton={true} />
+            <Header />
 
             {/* Referral Content */}
             <ScrollView 

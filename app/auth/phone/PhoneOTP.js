@@ -12,10 +12,10 @@ import {
 import { useNavigation, useRoute } from '@react-navigation/native';
 import * as Font from 'expo-font';
 import { useFonts, JetBrainsMono_400Regular } from '@expo-google-fonts/jetbrains-mono';
-import Header from '../../components/Header';
 import OTPInputView from '@twotalltotems/react-native-otp-input';
-import { supabase } from '../../lib/supabaseClient';
-import { useUserStore } from '../../atoms/userId';
+import { useUserStore } from '../../../atoms/userId';
+import { supabase } from '../../../lib/supabaseClient';
+import Header from '../../components/Header';
 
 const { width, height } = Dimensions.get('window');
 
@@ -33,11 +33,11 @@ export default function PhoneOTP() {
     const otpInputRef = useRef(null);
     const setUserId = useUserStore((state) => state.setUserId)
 
-    const [fontsLoaded] = Font.useFonts({
-        'Satoshi-Variable': require('../../assets/fonts/Satoshi-Variable.ttf'),
+    Font.useFonts({
+        'Satoshi-Variable': require('../../../assets/fonts/Satoshi-Variable.ttf'),
     });
 
-    const [googleFontsLoaded] = useFonts({
+    useFonts({
         JetBrainsMono_400Regular,
     });
 
@@ -87,7 +87,6 @@ export default function PhoneOTP() {
 
     return (
         <SafeAreaView style={styles.container}>
-            {/* Header with Back Button */}
             <Header />
 
             {/* Content */}

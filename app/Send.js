@@ -10,20 +10,18 @@ import {
     Dimensions,
     Platform,
     Alert,
-    Modal,
-    ActivityIndicator
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import * as Font from 'expo-font';
 import { useFonts, JetBrainsMono_400Regular } from '@expo-google-fonts/jetbrains-mono';
-import BottomMenu from '../components/BottomMenu';
-import Header from '../components/Header';
+import BottomMenu from './components/BottomMenu';
+import Header from './components/Header';
 import { useWallet } from '../atoms/wallet';
 import { getWalletBalance } from '../lib/utils';
 import axios from 'axios';
 import { wallet_provider_api, WALLET_PROVIDER_TOKEN } from '../lib/constants';
 import { supabase } from '../lib/supabaseClient';
-import LoadingModal from '../modals/LoadingModal';
+import LoadingModal from './components/LoadingModal';
 
 const { width, height } = Dimensions.get('window');
 
@@ -31,10 +29,10 @@ const scale = size => width / 375 * size;
 const verticalScale = size => height / 812 * size;
 const moderateScale = (size, factor = 0.5) => size + (scale(size) - size) * factor;
 
-export default function Invest() {
+export default function Send() {
     const navigation = useNavigation();
-    const [investmentAmount, setInvestmentAmount] = useState('');
-    const [selectedPool, setSelectedPool] = useState('Vesu Pool');
+    const [amount, setAmount] = useState('');
+    const [recipientAddress, setRecipientAddress] = useState('');
     const [balance, setBalance] = useState(0);
     const wallet = useWallet((state) => state.wallet);
     const [isLoading, setIsLoading] = useState(false);
@@ -56,7 +54,7 @@ export default function Invest() {
                 const newBalance = await getWalletBalance(wallet.address);
                 setBalance(newBalance.balance);
             } catch (error) {
-                console.error('Error al obtener el balance:', error);
+                console.error('Error fetching balance:', error);
             }
         }
 
@@ -71,85 +69,98 @@ export default function Invest() {
 
     const handleChangeAmount = (text) => {
         const sanitized = text.replace(',', '.');
-        setInvestmentAmount(sanitized);
+        setAmount(sanitized);
     };
 
+    const validateStarknetAddress = (address) => {
+        return address.startsWith('0x') && address.length === 66;
+    };
 
-    const createPosition = async () => {
-        try {
-            const response = await axios.post(
-                wallet_provider_api + 'position',
-                {
-                    amount: investmentAmount,
-                    address: wallet.address,
-                    publicKey: wallet.public_key,
-                    hashedPk: wallet.private_key,
-                    hashedPin: wallet.pin,
-                    deploymentData: wallet.deployment_data,
-                    deployed: wallet.deployed,
-                },
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Authorization: `Bearer ${WALLET_PROVIDER_TOKEN}`,
-                    },
-                }
-            );
-            return response.data;
-        } catch (err) {
-            Alert.alert("An error ocurred while creating position, try again.");
-            setIsLoading(false);
-        }
-    }
-
-    const handleInvest = () => {
-        if (!investmentAmount || isNaN(investmentAmount) || parseFloat(investmentAmount) <= 0) {
-            Alert.alert('Invalid Amount', 'Please enter a valid investment amount');
+    const handleSend = async () => {
+        if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
+            Alert.alert('Invalid Amount', 'Please enter a valid amount');
             return;
         }
 
-        if (parseFloat(investmentAmount) > balance) {
-            Alert.alert('Insufficient Balance', 'You don\'t have enough funds for this investment');
+        if (parseFloat(amount) > balance) {
+            Alert.alert('Insufficient Balance', 'You don\'t have enough funds for this transfer');
             return;
         }
 
-        // In a real app, this would call your investment API
+        if (!recipientAddress) {
+            Alert.alert('Missing Address', 'Please enter a recipient address');
+            return;
+        }
+
+        if (!validateStarknetAddress(recipientAddress)) {
+            Alert.alert('Invalid Address', 'Please enter a valid Starknet wallet address');
+            return;
+        }
+
         Alert.alert(
-            'Confirm Investment',
-            `Invest $${investmentAmount} in ${selectedPool}?`,
+            'Confirm Transfer',
+            `Send $${amount} to ${recipientAddress.substring(0, 6)}...${recipientAddress.substring(recipientAddress.length - 4)}?`,
             [
                 { text: 'Cancel', style: 'cancel' },
                 {
                     text: 'Confirm',
                     onPress: async () => {
                         setIsLoading(true);
-                        const positionTx = await createPosition();
-                        if (positionTx.result == null) {
-                            Alert.alert('Error creating position');
-                            return;
-                        }
-
-                        const { error: txError } = await supabase
-                            .from('transaction')
-                            .insert([
+                        try {
+                            // In production, replace with your actual send transaction function
+                            const response = await axios.post(
+                                wallet_provider_api + 'wallet/send',
                                 {
-                                    uid: wallet.uid,
-                                    type: "Invest",
-                                    amount: investmentAmount,
-                                    tx_hash: positionTx.result,
+                                    amount: amount,
+                                    address: wallet.address,
+                                    hashedPk: wallet.private_key,
+                                    hashedPin: wallet.pin,
+                                    receiverAddress: recipientAddress,
                                 },
-                            ]);
+                                {
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        Authorization: `Bearer ${WALLET_PROVIDER_TOKEN}`,
+                                    },
+                                }
+                            );
 
-                        if (txError) {
-                            console.error('Insert error:', txError);
-                            Alert.alert('Error saving transaction to database');
+                            if (!response.data.result) {
+                                throw new Error('Transaction failed');
+                            }
+
+                            const txHash = response.data.result;
+
+                            // Save transaction to database
+                            const { error: txError } = await supabase
+                                .from('transaction')
+                                .insert([
+                                    {
+                                        uid: wallet.uid,
+                                        type: "Send",
+                                        amount: amount,
+                                        tx_hash: txHash,
+                                    },
+                                ]);
+
+                            if (txError) {
+                                console.error('Insert error:', txError);
+                                Alert.alert('Error saving transaction to database');
+                                setIsLoading(false);
+                                return;
+                            }
+
                             setIsLoading(false);
-                            return;
+                            Alert.alert('Success', `You've sent $${amount} to ${recipientAddress.substring(0, 6)}...${recipientAddress.substring(recipientAddress.length - 4)}`);
+                            // Reset fields
+                            setAmount('');
+                            setRecipientAddress('');
+                            navigation.navigate('Dashboard');
+                        } catch (error) {
+                            console.error('Send error:', error);
+                            setIsLoading(false);
+                            Alert.alert('Transaction Failed', 'An error occurred while sending funds. Please try again.');
                         }
-                        setIsLoading(false);
-
-                        Alert.alert('Success', `You've invested $${investmentAmount} in Vesu Protocol`);
-                        navigation.navigate('Dashboard');
                     }
                 }
             ]
@@ -175,9 +186,26 @@ export default function Invest() {
                     <Text style={styles.balanceAmount}>{balance.toFixed(2)} USD</Text>
                 </View>
 
-                {/* Investment Input */}
+                {/* Recipient Address Input */}
                 <View style={styles.inputContainer}>
-                    <Text style={styles.inputLabel}>AMOUNT TO INVEST (USD)</Text>
+                    <Text style={styles.inputLabel}>RECIPIENT STARKNET ADDRESS</Text>
+                    <View style={styles.addressInputContainer}>
+                        <TextInput
+                            style={styles.addressInput}
+                            placeholder="0x..."
+                            placeholderTextColor="#555"
+                            value={recipientAddress}
+                            onChangeText={setRecipientAddress}
+                            selectionColor="#FFFFE3"
+                            autoCapitalize="none"
+                            autoCorrect={false}
+                        />
+                    </View>
+                </View>
+
+                {/* Amount Input */}
+                <View style={styles.inputContainer}>
+                    <Text style={styles.inputLabel}>AMOUNT TO SEND (USD)</Text>
                     <View style={styles.amountInputContainer}>
                         <Text style={styles.currencySymbol}>$</Text>
                         <TextInput
@@ -185,52 +213,51 @@ export default function Invest() {
                             placeholder="0.00"
                             placeholderTextColor="#555"
                             keyboardType="decimal-pad"
-                            value={investmentAmount}
+                            value={amount}
                             onChangeText={handleChangeAmount}
                             selectionColor="#FFFFE3"
-                            step="0.01"
                         />
                         <TouchableOpacity
                             style={styles.maxButton}
-                            onPress={() => setInvestmentAmount(balance.toString())}
+                            onPress={() => setAmount(balance.toString())}
                         >
                             <Text style={styles.maxButtonText}>MAX</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
 
-                {/* Investment Summary */}
-                {investmentAmount && !isNaN(investmentAmount) && parseFloat(investmentAmount) > 0 && (
+                {/* Transfer Summary */}
+                {amount && !isNaN(amount) && parseFloat(amount) > 0 && recipientAddress && (
                     <View style={styles.summaryCard}>
                         <View style={styles.summaryRow}>
-                            <Text style={styles.summaryLabel}>Investment Amount</Text>
-                            <Text style={styles.summaryValue}>${parseFloat(investmentAmount).toFixed(2)}</Text>
+                            <Text style={styles.summaryLabel}>Transfer Amount</Text>
+                            <Text style={styles.summaryValue}>${parseFloat(amount).toFixed(2)}</Text>
                         </View>
-                        {/* <View style={styles.summaryRow}>
-                            <Text style={styles.summaryLabel}>Estimated APY</Text>
-                            <Text style={styles.summaryValue}>
-                                {investmentPools.find(p => p.name === selectedPool)?.apy}
+                        <View style={styles.summaryRow}>
+                            <Text style={styles.summaryLabel}>Recipient</Text>
+                            <Text style={styles.summaryValue} numberOfLines={1} ellipsizeMode="middle">
+                                {recipientAddress.substring(0, 6)}...{recipientAddress.substring(recipientAddress.length - 4)}
                             </Text>
-                        </View> */}
+                        </View>
                     </View>
                 )}
 
-                {/* Invest Button */}
+                {/* Send Button */}
                 <TouchableOpacity
                     style={[
-                        styles.investButton,
-                        (!investmentAmount || isNaN(investmentAmount) || parseFloat(investmentAmount) <= 0) &&
+                        styles.sendButton,
+                        (!amount || isNaN(amount) || parseFloat(amount) <= 0 || !recipientAddress) &&
                         styles.disabledButton
                     ]}
-                    onPress={handleInvest}
-                    disabled={!investmentAmount || isNaN(investmentAmount) || parseFloat(investmentAmount) <= 0}
+                    onPress={handleSend}
+                    disabled={!amount || isNaN(amount) || parseFloat(amount) <= 0 || !recipientAddress}
                 >
-                    <Text style={styles.investButtonText}>Invest</Text>
+                    <Text style={styles.sendButtonText}>Send</Text>
                 </TouchableOpacity>
 
                 {/* Disclaimer */}
                 <Text style={styles.disclaimer}>
-                    Investments are subject to market risks. Past performance is not indicative of future results.
+                    Double-check the recipient address before sending. Transactions cannot be reversed once confirmed.
                 </Text>
             </ScrollView>
 
@@ -248,19 +275,6 @@ const styles = StyleSheet.create({
     scrollContent: {
         paddingHorizontal: moderateScale(20),
         paddingBottom: verticalScale(100),
-    },
-    titleContainer: {
-        marginBottom: verticalScale(30),
-    },
-    title: {
-        color: '#FFFFE3',
-        fontSize: moderateScale(28),
-        fontWeight: 'bold',
-        marginBottom: verticalScale(5),
-    },
-    subtitle: {
-        color: '#555',
-        fontSize: moderateScale(16),
     },
     balanceCard: {
         backgroundColor: '#000',
@@ -281,12 +295,25 @@ const styles = StyleSheet.create({
         fontFamily: 'JetBrainsMono_400Regular'
     },
     inputContainer: {
-        marginBottom: verticalScale(30),
+        marginBottom: verticalScale(20),
     },
     inputLabel: {
         color: '#555',
         fontSize: moderateScale(14),
         marginBottom: verticalScale(15),
+    },
+    addressInputContainer: {
+        backgroundColor: '#000',
+        borderRadius: moderateScale(10),
+        padding: moderateScale(20),
+        borderWidth: 1,
+        borderColor: '#333',
+    },
+    addressInput: {
+        color: '#FFFFE3',
+        fontSize: moderateScale(16),
+        fontFamily: 'JetBrainsMono_400Regular',
+        padding: 0,
     },
     amountInputContainer: {
         flexDirection: 'row',
@@ -321,41 +348,6 @@ const styles = StyleSheet.create({
         fontSize: moderateScale(14),
         fontWeight: 'bold',
     },
-    sectionTitle: {
-        color: '#555',
-        fontSize: moderateScale(14),
-        marginBottom: verticalScale(15),
-    },
-    poolsContainer: {
-        marginBottom: verticalScale(30),
-    },
-    poolCard: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        backgroundColor: '#000',
-        borderRadius: moderateScale(10),
-        padding: moderateScale(20),
-        marginBottom: verticalScale(15),
-        borderWidth: 1,
-        borderColor: '#333',
-    },
-    selectedPoolCard: {
-        borderColor: '#4CAF50',
-    },
-    poolInfo: {
-        flex: 1,
-    },
-    poolName: {
-        color: '#FFFFE3',
-        fontSize: moderateScale(18),
-        marginBottom: verticalScale(5),
-    },
-    poolApy: {
-        color: '#4CAF50',
-        fontSize: moderateScale(14),
-        fontFamily: 'JetBrainsMono_400Regular',
-    },
     summaryCard: {
         backgroundColor: '#000',
         borderRadius: moderateScale(10),
@@ -375,8 +367,9 @@ const styles = StyleSheet.create({
         color: '#FFFFE3',
         fontSize: moderateScale(14),
         fontFamily: 'JetBrainsMono_400Regular',
+        maxWidth: '60%',
     },
-    investButton: {
+    sendButton: {
         backgroundColor: '#FFFFE3',
         padding: moderateScale(16),
         alignItems: 'center',
@@ -385,7 +378,7 @@ const styles = StyleSheet.create({
     disabledButton: {
         backgroundColor: '#333',
     },
-    investButtonText: {
+    sendButtonText: {
         color: '#11110E',
         fontSize: moderateScale(16),
     },
@@ -394,27 +387,5 @@ const styles = StyleSheet.create({
         fontSize: moderateScale(12),
         textAlign: 'center',
         lineHeight: moderateScale(18),
-    },
-    loadingOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        position: 'absolute',
-        width: '100%',
-        height: '100%',
-        zIndex: 999,
-    },
-    loadingContainer: {
-        backgroundColor: '#11110E',
-        padding: 20,
-        borderRadius: 10,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    loadingText: {
-        color: '#FFFFE3',
-        marginTop: 10,
-        fontSize: 16,
     },
 });

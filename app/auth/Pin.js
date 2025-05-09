@@ -12,14 +12,14 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import * as Font from 'expo-font';
 import { useFonts, JetBrainsMono_400Regular } from '@expo-google-fonts/jetbrains-mono';
-import Header from './components/Header';
 import { MaterialIcons } from '@expo/vector-icons';
-import { supabase } from './lib/supabaseClient';
-import { wallet_provider_api, WALLET_PROVIDER_TOKEN } from './lib/constants';
+import { supabase } from '../../lib/supabaseClient';
+import { wallet_provider_api, WALLET_PROVIDER_TOKEN } from '../../lib/constants';
 import axios from 'axios';
-import { decryptPin, encryptPin } from './lib/utils';
-import { useWallet } from './atoms/wallet';
-import { useUserStore } from './atoms/userId';
+import { decryptPin, encryptPin } from '../../lib/utils';
+import { useWallet } from '../../atoms/wallet';
+import { useUserStore } from '../../atoms/userId';
+import Header from '../components/Header';
 
 const { width, height } = Dimensions.get('window');
 
@@ -38,7 +38,7 @@ export default function Pin() {
     const [userData, setUserData] = useState(null);
 
     const [fontsLoaded] = Font.useFonts({
-        'Satoshi-Variable': require('./assets/fonts/Satoshi-Variable.ttf'),
+        'Satoshi-Variable': require('../../assets/fonts/Satoshi-Variable.ttf'),
     });
 
     const [googleFontsLoaded] = useFonts({

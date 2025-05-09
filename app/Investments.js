@@ -5,11 +5,11 @@ import * as Font from 'expo-font';
 import { useFonts, JetBrainsMono_400Regular } from '@expo-google-fonts/jetbrains-mono';
 import BottomMenu from './components/BottomMenu';
 import Header from './components/Header';
-import { useWallet } from './atoms/wallet';
+import { useWallet } from '../atoms/wallet';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { wallet_provider_api, WALLET_PROVIDER_TOKEN } from './lib/constants';
-import LoadingModal from './modals/LoadingModal';
+import { wallet_provider_api, WALLET_PROVIDER_TOKEN } from '../lib/constants';
+import LoadingModal from './components/LoadingModal';
 
 export default function Investments() {
     const navigation = useNavigation();
@@ -19,7 +19,7 @@ export default function Investments() {
     const [apy, setApy] = useState(0);
 
     Font.useFonts({
-        'Satoshi-Variable': require('./assets/fonts/Satoshi-Variable.ttf'),
+        'Satoshi-Variable': require('../assets/fonts/Satoshi-Variable.ttf'),
     });
 
     useFonts({

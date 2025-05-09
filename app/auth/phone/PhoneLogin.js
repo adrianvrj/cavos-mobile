@@ -14,8 +14,8 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import * as Font from 'expo-font';
 import { useFonts, JetBrainsMono_400Regular } from '@expo-google-fonts/jetbrains-mono';
+import { supabase } from '../../../lib/supabaseClient';
 import Header from '../../components/Header';
-import { supabase } from '../../lib/supabaseClient';
 
 const { width, height } = Dimensions.get('window');
 
@@ -30,7 +30,7 @@ export default function PhoneLogin() {
     const [countryCode, setCountryCode] = useState('1');
 
     const [fontsLoaded] = Font.useFonts({
-        'Satoshi-Variable': require('../../assets/fonts/Satoshi-Variable.ttf'),
+        'Satoshi-Variable': require('../../../assets/fonts/Satoshi-Variable.ttf'),
     });
 
     const [googleFontsLoaded] = useFonts({
@@ -52,6 +52,7 @@ export default function PhoneLogin() {
         const { data, error } = await supabase.auth.signInWithOtp({
             phone: countryCode + phoneNumber,
         });
+        console.error('Error signing in:', error);
         if (error) Alert.alert("Something went wrong, please try again");
         else navigation.navigate('PhoneOTP', { phoneNumber: `${countryCode}${phoneNumber}` });;
     };
@@ -59,7 +60,7 @@ export default function PhoneLogin() {
     return (
         <SafeAreaView style={styles.container}>
             {/* Header with Back Button */}
-            <Header showBackButton={true} />
+            <Header/>
 
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}

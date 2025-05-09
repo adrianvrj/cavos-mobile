@@ -1,21 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ActivityIndicator, View } from 'react-native';
-
+import { supabase } from '../lib/supabaseClient';
 // Screens
+import Login from './auth/Login';
+import Pin from './auth/Pin';
 import Dashboard from './Dashboard';
-import Login from './Login';
 import Investments from './Investments';
-import Referral from './Referral';
-import Pin from './Pin';
-import Buy from './actions/Buy';
-import Invest from './actions/Invest';
-import { supabase } from './lib/supabaseClient';
+import Referral from './auth/Referral';
 import PhoneLogin from './auth/phone/PhoneLogin';
 import PhoneOTP from './auth/phone/PhoneOTP';
+import Buy from './Buy';
+import Invest from './Invest';
+import Send from './Send';
 import Providers from './Providers';
-import Send from './actions/Send';
 
 const Stack = createNativeStackNavigator();
 

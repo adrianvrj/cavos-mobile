@@ -38,3 +38,9 @@ yarn-error.*
 .env
 
 eas.*
+
+ios/
+
+android/
+
+info.plist
