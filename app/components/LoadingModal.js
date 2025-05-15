@@ -19,9 +19,6 @@ export default function LoadingModal() {
         JetBrainsMono_400Regular,
     });
 
-    Text.defaultProps = Text.defaultProps || {};
-    Text.defaultProps.style = { fontFamily: 'Satoshi-Variable' };
-
 
     return (
         <SafeAreaView style={styles.container}>

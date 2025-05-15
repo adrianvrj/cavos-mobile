@@ -154,12 +154,12 @@ export default function Dashboard() {
                             <View style={styles.transactionRight}>
                                 <Text
                                     style={
-                                        tx.type === 'Deposit'
+                                        tx.type === 'Deposit' || tx.type === 'Sell BTC'
                                             ? styles.transactionAmountPositive
                                             : styles.transactionAmountNegative
                                     }
                                 >
-                                    {tx.type === 'Deposit' ? '+' : '-'}
+                                    {tx.type === 'Deposit' || tx.type === 'Sell BTC' ? '+' : '-'}
                                     {tx.amount.toFixed(2)} USD
                                 </Text>
                                 <Text style={styles.transactionDate}>

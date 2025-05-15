@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons'; // Importa la librería de íconos
+import Icon from 'react-native-vector-icons/Ionicons';
+import Zocial from 'react-native-vector-icons/Zocial'
 import { useNavigation } from '@react-navigation/native';
 
 export default function BottomMenu() {
@@ -18,6 +19,10 @@ export default function BottomMenu() {
     navigation.navigate('Referral');
   };
 
+  const navigateToBitcoinAccount = () => {
+    navigation.navigate('BitcoinAccount');
+  };
+
   return (
     <View style={styles.menuContainer}>
       <TouchableOpacity style={styles.menuItem} onPress={navigateToInvestments}>
@@ -28,6 +33,11 @@ export default function BottomMenu() {
         <Icon name="home-outline" size={24} color="#FFFFE3" />
       </TouchableOpacity>
 
+      <TouchableOpacity style={styles.menuItem} onPress={navigateToBitcoinAccount}>
+        <Zocial name="bitcoin"  size={24} color="#FFFFE3" />
+      </TouchableOpacity>
+
+      {/* Uncomment if needed */}
       {/* <TouchableOpacity style={styles.menuItem} onPress={navigateToReferral}>
         <Icon name="people-outline" size={24} color="#FFFFE3" />
       </TouchableOpacity> */}
