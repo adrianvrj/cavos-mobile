@@ -232,7 +232,7 @@ export default function Pin() {
                 Alert.alert("Account setup successful!", "", [
                     {
                         text: "Continue",
-                        onPress: () => navigation.navigate('Dashboard')
+                        onPress: () => navigation.navigate('BottomMenu')
                     }
                 ]);
             } else {
@@ -242,7 +242,7 @@ export default function Pin() {
                 }
                 else {
                     setWallet(userData);
-                    navigation.navigate('Dashboard');
+                    navigation.navigate('BottomMenu');
                 }
             }
         } catch (err) {

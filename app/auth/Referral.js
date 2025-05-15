@@ -16,7 +16,6 @@ import * as Font from 'expo-font';
 import { useFonts, JetBrainsMono_400Regular } from '@expo-google-fonts/jetbrains-mono';
 import { MaterialIcons } from '@expo/vector-icons';
 import Header from '../components/Header';
-import BottomMenu from '../components/BottomMenu';
 
 const { width, height } = Dimensions.get('window');
 
@@ -127,8 +126,6 @@ export default function Referral() {
                     </View>
                 </View>
             </ScrollView>
-            
-            <BottomMenu/>
         </SafeAreaView>
     );
 }

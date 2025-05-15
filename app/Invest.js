@@ -14,7 +14,6 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import * as Font from 'expo-font';
 import { useFonts, JetBrainsMono_400Regular } from '@expo-google-fonts/jetbrains-mono';
-import BottomMenu from './components/BottomMenu';
 import Header from './components/Header';
 import { useWallet } from '../atoms/wallet';
 import { getWalletBalance } from '../lib/utils';
@@ -231,8 +230,6 @@ export default function Invest() {
                     Investments are subject to market risks. Past performance is not indicative of future results.
                 </Text>
             </ScrollView>
-
-            <BottomMenu />
         </SafeAreaView>
     );
 }

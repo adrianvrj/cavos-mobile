@@ -21,7 +21,6 @@ import { useUserStore } from '../atoms/userId';
 import { supabase } from '../lib/supabaseClient';
 import Header from './components/Header';
 import LoadingModal from './components/LoadingModal';
-import BottomMenu from './components/BottomMenu';
 
 const { width, height } = Dimensions.get('window');
 
@@ -177,7 +176,6 @@ export default function Dashboard() {
                     ))}
                 </ScrollView>
             </View>
-            <BottomMenu />
         </SafeAreaView>
     );
 }

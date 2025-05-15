@@ -30,7 +30,6 @@ export default function LoadingModal() {
                 <View style={styles.loadingOverlay}>
                     <View style={styles.loadingContainer}>
                         <ActivityIndicator size="large" color="#FFFFE3" />
-                        <Text style={styles.loadingText}>Loading...</Text>
                     </View>
                 </View>
             </Modal>
