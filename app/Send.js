@@ -107,7 +107,6 @@ export default function Send() {
                     onPress: async () => {
                         setIsLoading(true);
                         try {
-                            // In production, replace with your actual send transaction function
                             const response = await axios.post(
                                 wallet_provider_api + 'wallet/send',
                                 {

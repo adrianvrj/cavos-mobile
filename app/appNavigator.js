@@ -14,6 +14,10 @@ import Buy from './Buy';
 import Invest from './Invest';
 import Send from './Send';
 import Providers from './Providers';
+import BitcoinAccount from './BitcoinAccount';
+import BuyBTC from './btc/BuyBTC';
+import SellBTC from './btc/SellBTC';
+import InvestBTC from './btc/InvestBTC';
 
 const Stack = createNativeStackNavigator();
 
@@ -57,6 +61,10 @@ export default function AppNavigator() {
         <Stack.Screen name="Send" component={Send} />
         <Stack.Screen name="PhoneLogin" component={PhoneLogin} />
         <Stack.Screen name="PhoneOTP" component={PhoneOTP} />
+        <Stack.Screen name="BitcoinAccount" component={BitcoinAccount} />
+        <Stack.Screen name="BuyBTC" component={BuyBTC} />
+        <Stack.Screen name="SellBTC" component={SellBTC} />
+        <Stack.Screen name="InvestBTC" component={InvestBTC} />
       </Stack.Navigator>
     </Providers>
   );
