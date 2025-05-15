@@ -3,7 +3,6 @@ import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import * as Font from 'expo-font';
 import { useFonts, JetBrainsMono_400Regular } from '@expo-google-fonts/jetbrains-mono';
-import BottomMenu from './components/BottomMenu';
 import Header from './components/Header';
 import { useWallet } from '../atoms/wallet';
 import React, { useState, useEffect } from 'react';
@@ -165,8 +164,6 @@ export default function Investments() {
 
             {/* Empty Space for Better Layout */}
             <View style={styles.emptySpace}></View>
-
-            <BottomMenu />
         </SafeAreaView>
     );
 }

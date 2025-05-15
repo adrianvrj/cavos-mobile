@@ -1,67 +1,39 @@
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import Zocial from 'react-native-vector-icons/Zocial'
-import { useNavigation } from '@react-navigation/native';
+import ZocialIcon from 'react-native-vector-icons/Zocial'; // Import Zion Icon library
+import Dashboard from '../Dashboard';
+import Investments from '../Investments';
+import BitcoinAccount from '../BitcoinAccount';
+
+const Tab = createBottomTabNavigator();
 
 export default function BottomMenu() {
-  const navigation = useNavigation();
-
-  const navigateToHome = () => {
-    navigation.navigate('Dashboard');
-  };
-
-  const navigateToInvestments = () => {
-    navigation.navigate('Investments');
-  };
-
-  const navigateToReferral = () => {
-    navigation.navigate('Referral');
-  };
-
-  const navigateToBitcoinAccount = () => {
-    navigation.navigate('BitcoinAccount');
-  };
-
   return (
-    <View style={styles.menuContainer}>
-      <TouchableOpacity style={styles.menuItem} onPress={navigateToInvestments}>
-        <Icon name="wallet-outline" size={24} color="#FFFFE3" />
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.menuItem} onPress={navigateToHome}>
-        <Icon name="home-outline" size={24} color="#FFFFE3" />
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.menuItem} onPress={navigateToBitcoinAccount}>
-        <Zocial name="bitcoin"  size={24} color="#FFFFE3" />
-      </TouchableOpacity>
-
-      {/* Uncomment if needed */}
-      {/* <TouchableOpacity style={styles.menuItem} onPress={navigateToReferral}>
-        <Icon name="people-outline" size={24} color="#FFFFE3" />
-      </TouchableOpacity> */}
-    </View>
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarStyle: { backgroundColor: '#11110E', borderTopWidth: 0 },
+        tabBarActiveTintColor: '#FFFFE3',
+        tabBarInactiveTintColor: '#555',
+        tabBarIcon: ({ color, size }) => {
+          if (route.name === 'BTC Account') {
+            return <ZocialIcon name="bitcoin" size={size} color={color} />;
+          } else {
+            let iconName;
+            if (route.name === 'Dashboard') {
+              iconName = 'home-outline';
+            } else if (route.name === 'Investments') {
+              iconName = 'trending-up-outline';
+            }
+            return <Icon name={iconName} size={size} color={color} />;
+          }
+        },
+      })}
+    >
+      <Tab.Screen name="Dashboard" component={Dashboard} />
+      <Tab.Screen name="Investments" component={Investments} />
+      <Tab.Screen name="BTC Account" component={BitcoinAccount} />
+    </Tab.Navigator>
   );
 }
-
-const styles = StyleSheet.create({
-  menuContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#11110E',
-    paddingVertical: 15,
-    borderTopWidth: 1,
-    borderTopColor: '#333',
-    justifyContent: 'space-around',
-  },
-  menuItem: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  menuText: {
-    color: '#FFFFE3',
-    marginTop: 5,
-    fontSize: 12,
-    fontFamily: 'Satoshi-Variable',
-  },
-});

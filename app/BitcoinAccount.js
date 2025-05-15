@@ -14,7 +14,6 @@ import * as Font from 'expo-font';
 import { useFonts, JetBrainsMono_400Regular } from '@expo-google-fonts/jetbrains-mono';
 import { useWallet } from '../atoms/wallet';
 import Header from './components/Header';
-import BottomMenu from './components/BottomMenu';
 import axios from 'axios';
 import { wallet_provider_api, WALLET_PROVIDER_TOKEN } from '../lib/constants';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -151,9 +150,6 @@ export default function BitcoinAccount() {
                     </TouchableOpacity>
                 </View>
             </View>
-
-            {/* Bottom Menu */}
-            <BottomMenu />
         </SafeAreaView>
     );
 }

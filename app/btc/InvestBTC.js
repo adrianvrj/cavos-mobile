@@ -11,7 +11,6 @@ import {
     Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import BottomMenu from '../components/BottomMenu';
 import Header from '../components/Header';
 import { useWallet } from '../../atoms/wallet';
 import { getBTCPrice } from '../../lib/utils';
@@ -230,8 +229,6 @@ export default function InvestBTC() {
                     Investments are subject to market risks. Past performance is not indicative of future results.
                 </Text>
             </ScrollView>
-
-            <BottomMenu />
         </SafeAreaView>
     );
 }

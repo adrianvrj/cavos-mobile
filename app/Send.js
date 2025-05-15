@@ -14,7 +14,6 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import * as Font from 'expo-font';
 import { useFonts, JetBrainsMono_400Regular } from '@expo-google-fonts/jetbrains-mono';
-import BottomMenu from './components/BottomMenu';
 import Header from './components/Header';
 import { useWallet } from '../atoms/wallet';
 import { getWalletBalance } from '../lib/utils';
@@ -259,8 +258,6 @@ export default function Send() {
                     Double-check the recipient address before sending. Transactions cannot be reversed once confirmed.
                 </Text>
             </ScrollView>
-
-            <BottomMenu />
         </SafeAreaView>
     );
 }

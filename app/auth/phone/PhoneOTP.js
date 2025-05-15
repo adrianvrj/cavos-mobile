@@ -83,7 +83,7 @@ export default function PhoneOTP() {
                 navigation.navigate('Pin', { isReset: true });
             }
             else {
-                navigation.navigate('Pin', { isReset: false });
+                navigation.navigate('Invitation', { isReset: false });
             }
         }
     };

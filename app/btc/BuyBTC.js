@@ -14,7 +14,6 @@ import { useNavigation } from '@react-navigation/native';
 import { useWallet } from '../../atoms/wallet';
 import { getBTCPrice, getUsdcPrice, getWalletBalance } from '../../lib/utils';
 import Header from '../components/Header';
-import BottomMenu from '../components/BottomMenu';
 import { supabase } from '../../lib/supabaseClient';
 import { wallet_provider_api, WALLET_PROVIDER_TOKEN } from '../../lib/constants';
 import LoadingModal from '../components/LoadingModal';
@@ -221,8 +220,6 @@ export default function BuyBTC() {
                     Cryptocurrency purchases are subject to market risks. Please invest responsibly.
                 </Text>
             </ScrollView>
-
-            <BottomMenu />
         </SafeAreaView>
     );
 }
