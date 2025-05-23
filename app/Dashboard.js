@@ -11,6 +11,7 @@ import {
     Platform,
     Alert,
     Linking,
+    RefreshControl,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import * as Font from 'expo-font';
@@ -35,6 +36,7 @@ export default function Dashboard() {
     const userId = useUserStore((state) => state.userId);
     const navigation = useNavigation();
     const [isLoading, setIsLoading] = useState(false);
+    const [isRefreshing, setIsRefreshing] = useState(false); // State for RefreshControl
 
     Font.useFonts({
         'Satoshi-Variable': require('../assets/fonts/Satoshi-Variable.ttf'),
@@ -47,36 +49,42 @@ export default function Dashboard() {
     Text.defaultProps = Text.defaultProps || {};
     Text.defaultProps.style = { fontFamily: 'Satoshi-Variable' };
 
-    useEffect(() => {
-        async function getAccountInfo() {
-            try {
-                setIsLoading(true);
-                const newBalance = await getWalletBalance(wallet.address);
-                setBalance(newBalance.balance);
-                const { data, error } = await supabase
-                    .from('transaction')
-                    .select('*')
-                    .eq('uid', userId)
-                    .order('created_at', { ascending: false });
+    const getAccountInfo = async () => {
+        try {
+            setIsLoading(true);
+            const newBalance = await getWalletBalance(wallet.address);
+            setBalance(newBalance.balance);
+            const { data, error } = await supabase
+                .from('transaction')
+                .select('*')
+                .eq('uid', userId)
+                .order('created_at', { ascending: false });
 
-                if (error) {
-                    console.error('Supabase read error:', error);
-                    Alert.alert('Error reading from database');
-                    return;
-                }
-
-                setTransactions(data);
-            } catch (error) {
-                console.error('Error al obtener el balance:', error);
-            } finally {
-                setIsLoading(false);
+            if (error) {
+                console.error('Supabase read error:', error);
+                Alert.alert('Error reading from database');
+                return;
             }
-        }
 
+            setTransactions(data);
+        } catch (error) {
+            console.error('Error fetching balance and transactions:', error);
+        } finally {
+            setIsLoading(false);
+            setIsRefreshing(false); // Stop the refresh indicator
+        }
+    };
+
+    useEffect(() => {
         if (wallet) {
             getAccountInfo();
         }
     }, [wallet]);
+
+    const handleRefresh = () => {
+        setIsRefreshing(true);
+        getAccountInfo();
+    };
 
     const goToBuy = () => {
         navigation.navigate('Buy');
@@ -89,93 +97,104 @@ export default function Dashboard() {
     return (
         <SafeAreaView style={styles.container}>
             {/* Loading Modal */}
-            {isLoading && (
-                <LoadingModal />
-            )}
+            {isLoading && <LoadingModal />}
 
             <Header />
 
-            <View style={styles.cardContainer}>
-                <Text style={styles.cardText}>Coming soon...</Text>
-                <Image
-                    source={require('../assets/visa-logo.png')}
-                    style={styles.visaLogo}
-                    resizeMode="contain"
-                />
-            </View>
+            <ScrollView
+                style={styles.scrollView}
+                contentContainerStyle={styles.scrollContent}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={isRefreshing}
+                        onRefresh={handleRefresh} // Trigger refresh on pull
+                        tintColor="#FFFFE3" // iOS indicator color
+                        colors={['#FFFFE3']} // Android indicator colors
+                    />
+                }
+            >
+                <View style={styles.cardContainer}>
+                    <Text style={styles.cardText}>Coming soon...</Text>
+                    <Image
+                        source={require('../assets/visa-logo.png')}
+                        style={styles.visaLogo}
+                        resizeMode="contain"
+                    />
+                </View>
 
-            <View style={styles.balanceSection}>
-                <Text style={styles.balanceLabel}>YOUR BALANCE</Text>
-                <Text style={styles.balanceAmount}>{balance.toFixed(2)} USD</Text>
-            </View>
+                <View style={styles.balanceSection}>
+                    <Text style={styles.balanceLabel}>YOUR BALANCE</Text>
+                    <Text style={styles.balanceAmount}>{balance.toFixed(2)} USD</Text>
+                </View>
 
-            <View style={styles.actionButtons}>
-                <TouchableOpacity style={styles.buyButton} onPress={goToBuy}>
-                    <Text style={styles.buyButtonText}>Buy</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.sendButton} onPress={() => navigation.navigate('Send')}>
-                    <Text style={styles.sendButtonText}>Send</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.investButton} onPress={goToInvestment}>
-                    <Text style={styles.investButtonText}>Invest</Text>
-                </TouchableOpacity>
-            </View>
+                <View style={styles.actionButtons}>
+                    <TouchableOpacity style={styles.buyButton} onPress={goToBuy}>
+                        <Text style={styles.buyButtonText}>Buy</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.sendButton} onPress={() => navigation.navigate('Send')}>
+                        <Text style={styles.sendButtonText}>Send</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.investButton} onPress={goToInvestment}>
+                        <Text style={styles.investButtonText}>Invest</Text>
+                    </TouchableOpacity>
+                </View>
 
-            <View style={styles.transactionsSection}>
-                <Text style={styles.transactionsTitle}>TRANSACTIONS</Text>
+                <View style={styles.transactionsSection}>
+                    <Text style={styles.transactionsTitle}>TRANSACTIONS</Text>
 
-                <ScrollView
-                    style={styles.transactionsList}
-                    contentContainerStyle={styles.transactionsContent}
-                    showsVerticalScrollIndicator={false}
-                >
-                    {transaction.map((tx, index) => (
-                        <View key={index} style={styles.transactionItem}>
-                            <View style={styles.transactionLeft}>
-                                <TouchableOpacity
-                                    onPress={() => {
-                                        const url = tx.type === 'Account Creation'
-                                            ? `https://voyager.online/contract/${wallet.address}`
-                                            : `https://voyager.online/tx/${tx.tx_hash}`;
-                                        Linking.openURL(url).catch((err) =>
-                                            console.error('Failed to open URL:', err)
-                                        );
-                                    }}
-                                >
-                                    <Text style={styles.transactionType}>{tx.type}</Text>
-                                    <Text style={styles.transactionDetail}>
-                                        {tx.type === 'Account Creation'
-                                            ? tx.uid.slice(0, 4) + '...' + tx.uid.slice(-4)
-                                            : tx.tx_hash.slice(0, 4) + '...' + tx.tx_hash.slice(-4)}
+                    <ScrollView
+                        style={styles.transactionsList}
+                        contentContainerStyle={styles.transactionsContent}
+                        showsVerticalScrollIndicator={false}
+                    >
+                        {transaction.map((tx, index) => (
+                            <View key={index} style={styles.transactionItem}>
+                                <View style={styles.transactionLeft}>
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            const url = tx.type === 'Account Creation'
+                                                ? `https://voyager.online/contract/${wallet.address}`
+                                                : `https://voyager.online/tx/${tx.tx_hash}`;
+                                            Linking.openURL(url).catch((err) =>
+                                                console.error('Failed to open URL:', err)
+                                            );
+                                        }}
+                                    >
+                                        <Text style={styles.transactionType}>{tx.type}</Text>
+                                        <Text style={styles.transactionDetail}>
+                                            {tx.type === 'Account Creation'
+                                                ? tx.uid.slice(0, 4) + '...' + tx.uid.slice(-4)
+                                                : tx.tx_hash.slice(0, 4) + '...' + tx.tx_hash.slice(-4)}
+                                        </Text>
+                                    </TouchableOpacity>
+                                </View>
+                                <View style={styles.transactionRight}>
+                                    <Text
+                                        style={
+                                            tx.type === 'Deposit' || tx.type === 'Sell BTC' || tx.type === 'Close Investment'
+                                                ? styles.transactionAmountPositive
+                                                : styles.transactionAmountNegative
+                                        }
+                                    >
+                                        {tx.type === 'Deposit' || tx.type === 'Sell BTC' || tx.type === 'Close Investment' ? '+' : '-'}
+                                        {tx.amount.toFixed(2)} USD
                                     </Text>
-                                </TouchableOpacity>
+                                    <Text style={styles.transactionDate}>
+                                        {new Date(tx.created_at).toLocaleString(undefined, {
+                                            year: 'numeric',
+                                            month: 'short',
+                                            day: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit',
+                                            hour12: false,
+                                        })}
+                                    </Text>
+                                </View>
                             </View>
-                            <View style={styles.transactionRight}>
-                                <Text
-                                    style={
-                                        tx.type === 'Deposit' || tx.type === 'Sell BTC'
-                                            ? styles.transactionAmountPositive
-                                            : styles.transactionAmountNegative
-                                    }
-                                >
-                                    {tx.type === 'Deposit' || tx.type === 'Sell BTC' ? '+' : '-'}
-                                    {tx.amount.toFixed(2)} USD
-                                </Text>
-                                <Text style={styles.transactionDate}>
-                                    {new Date(tx.created_at).toLocaleString(undefined, {
-                                        year: 'numeric',
-                                        month: 'short',
-                                        day: 'numeric',
-                                        hour: '2-digit',
-                                        minute: '2-digit',
-                                        hour12: false,
-                                    })}
-                                </Text>
-                            </View>
-                        </View>
-                    ))}
-                </ScrollView>
-            </View>
+                        ))}
+                    </ScrollView>
+                </View>
+            </ScrollView>
         </SafeAreaView>
     );
 }
@@ -186,6 +205,12 @@ const styles = StyleSheet.create({
         backgroundColor: '#11110E',
         paddingHorizontal: moderateScale(20),
         paddingTop: Platform.OS === 'android' ? verticalScale(20) : 0,
+    },
+    scrollView: {
+        flex: 1,
+    },
+    scrollContent: {
+        paddingBottom: verticalScale(80),
     },
     cardContainer: {
         backgroundColor: '#000',

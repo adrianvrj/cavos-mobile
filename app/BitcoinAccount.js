@@ -73,8 +73,20 @@ export default function BitcoinAccount() {
                         },
                     }
                 );
-                setInvestedBtc(investmentResponse.data.earnPositions[0].total_supplied);
-                setApy(investmentResponse.data.earnPositions[0].poolApy);
+                const apyResponse = await axios.post(
+                    wallet_provider_api + 'vesu/pool/apy',
+                    {
+                        poolName: "Re7 USDC",
+                    },
+                    {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            Authorization: `Bearer ${WALLET_PROVIDER_TOKEN}`,
+                        },
+                    }
+                );
+                setApy(apyResponse.data.poolAPY);
+                setInvestedBtc(investmentResponse.data.total_supplied);
                 setIsLoading(false);
             } catch (err) {
                 console.error('Error fetching BTC data:', err);

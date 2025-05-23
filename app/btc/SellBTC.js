@@ -129,7 +129,7 @@ export default function SellBTC() {
             setIsLoading(false);
             Alert.alert('Success', `You've sold ${amount.toFixed(6)} BTC for USDC.`);
             setBtcAmount('');
-            navigation.navigate('BitcoinAccount');
+            navigation.navigate('BottomMenu');
         } catch (error) {
             console.error('Send error:', error);
             setIsLoading(false);
