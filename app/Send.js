@@ -153,7 +153,7 @@ export default function Send() {
                             // Reset fields
                             setAmount('');
                             setRecipientAddress('');
-                            navigation.navigate('Dashboard');
+                            navigation.navigate('BottomMenu');
                         } catch (error) {
                             console.error('Send error:', error);
                             setIsLoading(false);

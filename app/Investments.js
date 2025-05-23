@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Image, Alert } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, ScrollView, RefreshControl, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import * as Font from 'expo-font';
@@ -9,13 +9,16 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { wallet_provider_api, WALLET_PROVIDER_TOKEN } from '../lib/constants';
 import LoadingModal from './components/LoadingModal';
+import { supabase } from '../lib/supabaseClient';
 
 export default function Investments() {
     const navigation = useNavigation();
     const wallet = useWallet((state) => state.wallet);
     const [isLoading, setIsLoading] = useState(false);
+    const [isRefreshing, setIsRefreshing] = useState(false); // Estado para el RefreshControl
     const [totalInvested, setTotalInvested] = useState(0);
     const [apy, setApy] = useState(0);
+    const [poolId, setPoolId] = useState(0);
 
     Font.useFonts({
         'Satoshi-Variable': require('../assets/fonts/Satoshi-Variable.ttf'),
@@ -32,36 +35,55 @@ export default function Investments() {
         navigation.navigate('Invest');
     };
 
-    useEffect(() => {
-        async function getAccountInfo() {
-            try {
-                setIsLoading(true);
-                const positionResponse = await axios.post(
-                    wallet_provider_api + 'vesu/positions',
-                    {
-                        address: wallet.address,
-                        pool: "Re7 USDC",
+    const getAccountInfo = async () => {
+        try {
+            setIsLoading(true);
+            const positionResponse = await axios.post(
+                wallet_provider_api + 'vesu/positions',
+                {
+                    address: wallet.address,
+                    pool: "Re7 USDC",
+                },
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${WALLET_PROVIDER_TOKEN}`,
                     },
-                    {
-                        headers: {
-                            'Content-Type': 'application/json',
-                            Authorization: `Bearer ${WALLET_PROVIDER_TOKEN}`,
-                        },
-                    }
-                );
-                setApy(positionResponse.data.earnPositions[0].poolApy);
-                setTotalInvested(positionResponse.data.earnPositions[0].total_supplied);
-            } catch (error) {
-                console.error('Error fetching user positions', error);
-            } finally {
-                setIsLoading(false);
-            }
+                }
+            );
+            const apyResponse = await axios.post(
+                wallet_provider_api + 'vesu/pool/apy',
+                {
+                    poolName: "Re7 USDC",
+                },
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${WALLET_PROVIDER_TOKEN}`,
+                    },
+                }
+            );
+            setApy(apyResponse.data.poolAPY);
+            setTotalInvested(positionResponse.data.total_supplied);
+            setPoolId(positionResponse.data.poolid);
+        } catch (error) {
+            console.error('Error fetching user positions', error);
+        } finally {
+            setIsLoading(false);
+            setIsRefreshing(false); // Finaliza el estado de refresco
         }
+    };
 
+    useEffect(() => {
         if (wallet) {
             getAccountInfo();
         }
     }, [wallet]);
+
+    const handleRefresh = () => {
+        setIsRefreshing(true); // Activa el estado de refresco
+        getAccountInfo(); // Llama a la función para recargar la información
+    };
 
     const handleClaimRewards = async () => {
         setIsLoading(true);
@@ -111,59 +133,116 @@ export default function Investments() {
         }
     }
 
+    const handleCloseInvestment = async () => {
+        setIsLoading(true);
+        try {
+            const response = await axios.post(
+                wallet_provider_api + 'vesu/positions/withdraw',
+                {
+                    address: wallet.address,
+                    hashedPk: wallet.private_key,
+                    hashedPin: wallet.pin,
+                    poolId: poolId,
+                },
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${WALLET_PROVIDER_TOKEN}`,
+                    },
+                }
+            );
+            if (response.data.result == false) {
+                Alert.alert("An error occurred", "Please try again later");
+            }
+            else if (response.data.amount !== null && response.data.result !== null) {
+                const { error: txError } = await supabase
+                    .from('transaction')
+                    .insert([
+                        {
+                            uid: wallet.uid,
+                            type: "Close Investment",
+                            amount: response.data.amount,
+                            tx_hash: response.data.result,
+                        },
+                    ]);
+
+                if (txError) {
+                    console.error('Insert error:', txError);
+                    Alert.alert('Error saving transaction to database');
+                    setIsLoading(false);
+                    return;
+                }
+                Alert.alert("Investment Closed", `${response.data.amount} USDC has been sent to your account, investment data might take a few minutes to update`);
+            }
+        } catch (error) {
+            Alert.alert("An error occurred", "Please try again later");
+            console.error('Error closing investment', error);
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
     return (
         <SafeAreaView style={styles.container}>
             {isLoading && (
                 <LoadingModal />
             )}
 
-            {/* Header with Logout and Logo */}
             <Header />
 
-            {/* Investment Summary Card */}
-            <View style={styles.summaryCard}>
-                <Text style={styles.summaryTitle}>INVESTMENT SUMMARY</Text>
+            {/* ScrollView con RefreshControl */}
+            <ScrollView
+                contentContainerStyle={{ flexGrow: 1 }}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={isRefreshing}
+                        onRefresh={handleRefresh} // Llama a la función de refresco
+                        tintColor="#FFFFE3" // Color del indicador en iOS
+                        colors={['#FFFFE3']} // Colores del indicador en Android
+                    />
+                }
+            >
 
-                <View style={styles.summaryRow}>
-                    <View style={styles.summaryItem}>
-                        <View style={styles.iconContainer}>
-                            <Icon name="trending-up-outline" color="#FFFFE3" size={20} />
+                {/* Tarjeta de Resumen de Inversiones */}
+                <View style={styles.summaryCard}>
+                    <Text style={styles.summaryTitle}>INVESTMENT SUMMARY</Text>
+
+                    <View style={styles.summaryRow}>
+                        <View style={styles.summaryItem}>
+                            <View style={styles.iconContainer}>
+                                <Icon name="trending-up-outline" color="#FFFFE3" size={20} />
+                            </View>
+                            <Text style={styles.summaryLabel}>Total Invested</Text>
+                            <Text style={styles.summaryValue}>${totalInvested.toFixed(2)} USDC</Text>
                         </View>
-                        <Text style={styles.summaryLabel}>Total Invested</Text>
-                        <Text style={styles.summaryValue}>${totalInvested.toFixed(2)} USDC</Text>
+
+                        <View style={styles.summaryItem}>
+                            <View style={styles.iconContainer}>
+                                <Icon name="stats-chart-outline" color="#FFFFE3" size={20} />
+                            </View>
+                            <Text style={styles.summaryLabel}>Current APY</Text>
+                            <Text style={styles.summaryValue}>{apy.toFixed(2)}%</Text>
+                        </View>
                     </View>
 
-                    {/* <View style={styles.summaryItem}>
-                        <View style={styles.iconContainer}>
-                            <Icon name="cash-outline" color="#FFFFE3" size={20} />
-                        </View>
-                        <Text style={styles.summaryLabel}>Rewards</Text>
-                        <Text style={styles.summaryValue}>25.50 USDC</Text>
-                    </View> */}
-
-                    <View style={styles.summaryItem}>
-                        <View style={styles.iconContainer}>
-                            <Icon name="stats-chart-outline" color="#FFFFE3" size={20} />
-                        </View>
-                        <Text style={styles.summaryLabel}>Current APY</Text>
-                        <Text style={styles.summaryValue}>{apy.toFixed(2)}%</Text>
-                    </View>
+                    <TouchableOpacity style={styles.claimButton} onPress={handleClaimRewards}>
+                        <Text style={styles.claimButtonText}>Claim Rewards</Text>
+                    </TouchableOpacity>
                 </View>
 
-                <TouchableOpacity style={styles.claimButton} onPress={handleClaimRewards}>
-                    <Text style={styles.claimButtonText}>Claim Rewards</Text>
-                </TouchableOpacity>
-            </View>
+                {/* Botones de Acción */}
+                <View style={styles.actionButtons}>
+                    <TouchableOpacity style={styles.newInvestButton} onPress={goToInvestment}>
+                        <Text style={styles.newInvestButtonText}>Invest</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.newInvestButton} onPress={handleCloseInvestment}>
+                        <Text style={styles.newInvestButtonText}>Close</Text>
+                    </TouchableOpacity>
+                </View>
 
-            {/* Action Buttons */}
-            <View style={styles.actionButtons}>
-                <TouchableOpacity style={styles.newInvestButton} onPress={goToInvestment}>
-                    <Text style={styles.newInvestButtonText}>Invest</Text>
-                </TouchableOpacity>
-            </View>
-
-            {/* Empty Space for Better Layout */}
-            <View style={styles.emptySpace}></View>
+                {/* Espacio vacío para mejor diseño */}
+                <View style={styles.emptySpace}></View>
+            </ScrollView>
         </SafeAreaView>
     );
 }

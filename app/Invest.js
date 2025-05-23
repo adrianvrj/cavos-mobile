@@ -145,8 +145,8 @@ export default function Invest() {
                         }
                         setIsLoading(false);
 
-                        Alert.alert('Success', `You've invested $${investmentAmount} in Vesu Protocol`);
-                        navigation.navigate('Dashboard');
+                        Alert.alert('Success', `You've invested $${investmentAmount} in Vesu Protocol, the results might take a few minutes to show up in your account.`);
+                        navigation.navigate('BottomMenu');
                     }
                 }
             ]

@@ -138,7 +138,7 @@ export default function InvestBTC() {
             setIsLoading(false);
             Alert.alert('Success', `You've invested ${amount.toFixed(6)} BTC.`);
             setBtcAmount('');
-            navigation.navigate('Dashboard');
+            navigation.navigate('BottomMenu');
         } catch (error) {
             console.error('Error during investment:', error);
             setIsLoading(false);

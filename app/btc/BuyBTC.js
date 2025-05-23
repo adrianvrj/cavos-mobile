@@ -133,7 +133,7 @@ export default function BuyBTC() {
             setIsLoading(false);
             Alert.alert('Success', `You've bought ${calculateBtcAmount().toFixed(6)} BTC worth $${amount}.`);
             setUsdAmount('');
-            navigation.navigate('BitcoinAccount');
+            navigation.navigate('BottomMenu');
         } catch (error) {
             console.error('Send error:', error);
             setIsLoading(false);
