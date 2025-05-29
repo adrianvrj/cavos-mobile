@@ -18,6 +18,7 @@ import axios from 'axios';
 import { wallet_provider_api, WALLET_PROVIDER_TOKEN } from '../lib/constants';
 import Icon from 'react-native-vector-icons/Ionicons';
 import LoadingModal from './components/LoadingModal';
+import LoggedHeader from './components/LoggedHeader';
 
 const { width, height } = Dimensions.get('window');
 
@@ -116,7 +117,7 @@ export default function BitcoinAccount() {
             {isLoading && (
                 <LoadingModal />
             )}
-            <Header />
+            <LoggedHeader />
 
             {/* Main Content */}
             <View style={styles.content}>
@@ -133,7 +134,7 @@ export default function BitcoinAccount() {
                     <View style={styles.summaryRow}>
                         <View style={styles.summaryItem}>
                             <View style={styles.iconContainer}>
-                                <Icon name="trending-up-outline" color="#FFFFE3" size={20} />
+                                <Icon name="trending-up-outline" color="#EAE5DC" size={20} />
                             </View>
                             <Text style={styles.summaryLabel}>Total Invested</Text>
                             <Text style={styles.summaryValue}>{investedBtc.toFixed(6)} BTC</Text>
@@ -141,7 +142,7 @@ export default function BitcoinAccount() {
 
                         <View style={styles.summaryItem}>
                             <View style={styles.iconContainer}>
-                                <Icon name="stats-chart-outline" color="#FFFFE3" size={20} />
+                                <Icon name="stats-chart-outline" color="#EAE5DC" size={20} />
                             </View>
                             <Text style={styles.summaryLabel}>Current APY</Text>
                             <Text style={styles.summaryValue}>{apy.toFixed(2)}%</Text>
@@ -169,12 +170,13 @@ export default function BitcoinAccount() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#11110E',
+        backgroundColor: '#000000',
         paddingTop: Platform.OS === 'android' ? verticalScale(20) : 0,
     },
     content: {
         flex: 1,
         paddingHorizontal: moderateScale(20),
+        marginTop: verticalScale(20),
     },
     balanceSection: {
         marginBottom: verticalScale(30),
@@ -187,7 +189,7 @@ const styles = StyleSheet.create({
         alignSelf: 'center',
     },
     balanceAmount: {
-        color: '#FFFFE3',
+        color: '#EAE5DC',
         fontSize: moderateScale(36),
         fontWeight: '100',
         alignSelf: 'center',
@@ -228,52 +230,56 @@ const styles = StyleSheet.create({
         marginBottom: 4,
     },
     summaryValue: {
-        color: '#FFFFE3',
+        color: '#EAE5DC',
         fontSize: moderateScale(16),
         fontFamily: 'JetBrainsMono_400Regular',
     },
     actionButtons: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
+        justifyContent: 'center',
         marginBottom: verticalScale(40),
         marginHorizontal: width * 0.05,
+        gap: moderateScale(20), // Nuevo: espacio entre botones
     },
     buyButton: {
         flex: 1,
-        paddingVertical: verticalScale(12),
+        paddingVertical: verticalScale(16), // Más alto
         borderWidth: 1,
-        borderColor: '#FFFFE3',
+        borderColor: '#EAE5DC',
+        borderRadius: moderateScale(8), // Bordes redondeados
         alignItems: 'center',
         justifyContent: 'center',
-        marginRight: moderateScale(10),
     },
     buyButtonText: {
-        color: '#FFFFE3',
+        color: '#EAE5DC',
         fontSize: moderateScale(16),
+        fontWeight: '500', // Más grueso
     },
     sellButton: {
         flex: 1,
-        paddingVertical: verticalScale(12),
+        paddingVertical: verticalScale(16),
         borderWidth: 1,
-        borderColor: '#FFFFE3',
+        borderColor: '#EAE5DC',
+        borderRadius: moderateScale(8),
         alignItems: 'center',
         justifyContent: 'center',
-        marginHorizontal: moderateScale(10),
     },
     sellButtonText: {
-        color: '#FFFFE3',
+        color: '#EAE5DC',
         fontSize: moderateScale(16),
+        fontWeight: '500',
     },
     investButton: {
         flex: 1,
-        paddingVertical: verticalScale(12),
-        backgroundColor: '#FFFFE3',
+        paddingVertical: verticalScale(16),
+        backgroundColor: '#EAE5DC',
+        borderRadius: moderateScale(8),
         alignItems: 'center',
         justifyContent: 'center',
-        marginLeft: moderateScale(10),
     },
     investButtonText: {
         color: '#11110E',
         fontSize: moderateScale(16),
+        fontWeight: '500',
     },
 });

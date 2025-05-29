@@ -29,7 +29,7 @@ export default function LoadingModal() {
             >
                 <View style={styles.loadingOverlay}>
                     <View style={styles.loadingContainer}>
-                        <ActivityIndicator size="large" color="#FFFFE3" />
+                        <ActivityIndicator size="large" color="#EAE5DC" />
                     </View>
                 </View>
             </Modal>
@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     loadingText: {
-        color: '#FFFFE3',
+        color: '#EAE5DC',
         marginTop: 10,
         fontSize: 16,
     },

@@ -4,19 +4,14 @@ import { useNavigation } from '@react-navigation/native';
 import * as Font from 'expo-font';
 
 export default function Login() {
-
   const navigation = useNavigation();
 
-  const [fontsLoaded] = Font.useFonts({
+  Font.useFonts({
     'Satoshi-Variable': require('../../assets/fonts/Satoshi-Variable.ttf'),
   });
 
   Text.defaultProps = Text.defaultProps || {};
   Text.defaultProps.style = { fontFamily: 'Satoshi-Variable' };
-
-  const goToPin = () => {
-    navigation.navigate('Pin');
-  };
 
   const goToPhoneLogin = () => {
     navigation.navigate('PhoneLogin');
@@ -24,24 +19,18 @@ export default function Login() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.logoContainer}>
-        <Image
-          source={require('../../assets/cavos-logo.png')}
-        />
-        <Text style={styles.logoText}>CAVOS</Text>
-      </View>
+      <View style={styles.content}>
+        <View style={styles.logoContainer}>
+          <Image
+            source={require('../../assets/light-vertical-cavos-logo.png')} // This should be the combined logo+text image
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
+          <Text style={styles.taglineText}>Banking without a bank</Text>
+        </View>
 
-      <View style={styles.taglineContainer}>
-        <Text style={styles.taglineText}>
-          Invest stable coins{'\n'}
-          on the cheapest{'\n'}
-          and fastest chain.
-        </Text>
-      </View>
-
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity style={[styles.button, styles.phoneButton]} onPress={goToPhoneLogin}>
-          <Text style={styles.buttonText}>Continue with Phone Number</Text>
+        <TouchableOpacity style={styles.button} onPress={goToPhoneLogin}>
+          <Text style={styles.buttonText}>Get Started</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -51,91 +40,44 @@ export default function Login() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#11110E',
+    backgroundColor: '#000000',
+  },
+  content: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 60,
+    paddingVertical: 40,
     paddingHorizontal: 20,
   },
   logoContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 60,
-  },
-  logoIconGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: 10,
-  },
-  logoCircle: {
-    width: 15,
-    height: 15,
-    borderRadius: 10,
-    backgroundColor: '#FFFFE3',
-    marginRight: 3,
-  },
-  circleLarge: {
-    width: 25,
-    height: 25,
-    borderRadius: 15,
-  },
-  logoText: {
-    color: '#FFFFE3',
-    fontSize: 48,
-    marginLeft: 15,
-    fontWeight: '300'
-  },
-  taglineContainer: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoImage: {
+    width: 300,
+    height: 100,
+    marginBottom: 20,
   },
   taglineText: {
-    color: '#FFFFFF',
-    fontSize: 24,
+    color: '#EAE5DC',
+    fontSize: 18,
     textAlign: 'center',
-    lineHeight: 36,
+    marginTop: 10,
     fontWeight: '300',
   },
-  buttonContainer: {
-    width: '100%',
-    paddingHorizontal: 15,
-    marginBottom: 100
-  },
   button: {
-    flexDirection: 'row',
+    backgroundColor: '#EAE5DC',
+    width: '80%',
+    paddingVertical: 16,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 16,
-    marginBottom: 16,
-    position: 'relative',
-    marginHorizontal: 40
+    marginBottom: 40,
   },
   buttonText: {
+    color: '#000000',
     fontSize: 16,
     fontWeight: '500',
-    color: '#11110E',
-  },
-  appleButtonText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#FFFFE3',
-  },
-  buttonIcon: {
-    width: 30,
-    height: 30,
-    position: 'absolute',
-    right: 35,
-  },
-  googleButton: {
-    backgroundColor: '#FFFFE3',
-  },
-  appleButton: {
-    backgroundColor: '#1F1F21',
-    // borderColor: '#FFFFE3',
-    borderWidth: 1,
-  },
-  phoneButton: {
-    backgroundColor: '#FFFFE3',
   },
 });

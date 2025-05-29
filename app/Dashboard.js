@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     StyleSheet,
     Text,
@@ -20,7 +20,7 @@ import { getWalletBalance } from '../lib/utils';
 import { useWallet } from '../atoms/wallet';
 import { useUserStore } from '../atoms/userId';
 import { supabase } from '../lib/supabaseClient';
-import Header from './components/Header';
+import LoggedHeader from './components/LoggedHeader'; // Usando el nuevo header
 import LoadingModal from './components/LoadingModal';
 
 const { width, height } = Dimensions.get('window');
@@ -29,14 +29,16 @@ const scale = size => width / 375 * size;
 const verticalScale = size => height / 812 * size;
 const moderateScale = (size, factor = 0.5) => size + (scale(size) - size) * factor;
 
-export default function Dashboard() {
+export default function UpdatedDashboard() {
     const [balance, setBalance] = useState(0.000);
     const [transaction, setTransactions] = useState([]);
     const wallet = useWallet((state) => state.wallet);
     const userId = useUserStore((state) => state.userId);
     const navigation = useNavigation();
     const [isLoading, setIsLoading] = useState(false);
-    const [isRefreshing, setIsRefreshing] = useState(false); // State for RefreshControl
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    const scrollViewRef = useRef(null);
+    const [showHeader, setShowHeader] = useState(true);
 
     Font.useFonts({
         'Satoshi-Variable': require('../assets/fonts/Satoshi-Variable.ttf'),
@@ -71,7 +73,7 @@ export default function Dashboard() {
             console.error('Error fetching balance and transactions:', error);
         } finally {
             setIsLoading(false);
-            setIsRefreshing(false); // Stop the refresh indicator
+            setIsRefreshing(false);
         }
     };
 
@@ -90,109 +92,137 @@ export default function Dashboard() {
         navigation.navigate('Buy');
     };
 
-    const goToInvestment = () => {
-        navigation.navigate('Invest');
+    const goToSell = () => {
+        navigation.navigate('Send');
+    };
+
+    // Detecta el scroll para mostrar/ocultar el header
+    const handleScroll = (event) => {
+        const y = event.nativeEvent.contentOffset.y;
+        if (y >= height * 0.5 && showHeader) {
+            setShowHeader(false);
+        } else if (y < height * 0.5 && !showHeader) {
+            setShowHeader(true);
+        }
     };
 
     return (
         <SafeAreaView style={styles.container}>
-            {/* Loading Modal */}
             {isLoading && <LoadingModal />}
 
-            <Header />
+            {showHeader && <LoggedHeader />}
 
             <ScrollView
+                ref={scrollViewRef}
                 style={styles.scrollView}
-                contentContainerStyle={styles.scrollContent}
+                // contentContainerStyle={{ height: height * 2 }}
+                pagingEnabled
+                showsVerticalScrollIndicator={false}
+                onScroll={handleScroll}
+                scrollEventThrottle={16}
                 refreshControl={
                     <RefreshControl
                         refreshing={isRefreshing}
-                        onRefresh={handleRefresh} // Trigger refresh on pull
-                        tintColor="#FFFFE3" // iOS indicator color
-                        colors={['#FFFFE3']} // Android indicator colors
+                        onRefresh={handleRefresh}
+                        tintColor="#EAE5DC"
+                        colors={['#EAE5DC']}
                     />
                 }
             >
-                <View style={styles.cardContainer}>
-                    <Text style={styles.cardText}>Coming soon...</Text>
-                    <Image
-                        source={require('../assets/visa-logo.png')}
-                        style={styles.visaLogo}
-                        resizeMode="contain"
-                    />
+                {/* Sección principal */}
+                <View style={[styles.section]}>
+                    {/* Visa Card Image */}
+                    <View style={styles.cardContainer}>
+                        <Image
+                            source={require('../assets/cavos-card.png')} // Reemplaza con el nombre de tu PNG
+                            style={styles.visaCard}
+                            resizeMode="contain"
+                        />
+                    </View>
+
+                    {/* Balance Section */}
+                    <View style={styles.balanceSection}>
+                        <Text style={styles.balanceLabel}>YOUR BALANCE</Text>
+                        <Text style={styles.balanceAmount}>{balance.toFixed(2)} USD</Text>
+                    </View>
+
+                    {/* Action Buttons - Solo Buy y Sell */}
+                    <View style={styles.actionButtons}>
+                        <TouchableOpacity style={styles.buyButton} onPress={goToBuy}>
+                            <Text style={styles.buyButtonText}>Buy</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.sellButton} onPress={goToSell}>
+                            <Text style={styles.sellButtonText}>Send</Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    {/* Texto para invitar a scrollear */}
+                    <View style={styles.scrollHintContainer}>
+                        <Text style={styles.scrollHintText}>
+                            Scroll down to see your transaction history ↓
+                        </Text>
+                    </View>
+
                 </View>
 
-                <View style={styles.balanceSection}>
-                    <Text style={styles.balanceLabel}>YOUR BALANCE</Text>
-                    <Text style={styles.balanceAmount}>{balance.toFixed(2)} USD</Text>
-                </View>
+                {/* Sección de transacciones */}
+                <View style={[styles.section, { height }]}>
+                    {/* Transactions Section */}
+                    <View style={styles.transactionsSection}>
+                        <Text style={styles.transactionsTitle}>TRANSACTIONS</Text>
 
-                <View style={styles.actionButtons}>
-                    <TouchableOpacity style={styles.buyButton} onPress={goToBuy}>
-                        <Text style={styles.buyButtonText}>Buy</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.sendButton} onPress={() => navigation.navigate('Send')}>
-                        <Text style={styles.sendButtonText}>Send</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.investButton} onPress={goToInvestment}>
-                        <Text style={styles.investButtonText}>Invest</Text>
-                    </TouchableOpacity>
-                </View>
-
-                <View style={styles.transactionsSection}>
-                    <Text style={styles.transactionsTitle}>TRANSACTIONS</Text>
-
-                    <ScrollView
-                        style={styles.transactionsList}
-                        contentContainerStyle={styles.transactionsContent}
-                        showsVerticalScrollIndicator={false}
-                    >
-                        {transaction.map((tx, index) => (
-                            <View key={index} style={styles.transactionItem}>
-                                <View style={styles.transactionLeft}>
-                                    <TouchableOpacity
-                                        onPress={() => {
-                                            const url = tx.type === 'Account Creation'
-                                                ? `https://voyager.online/contract/${wallet.address}`
-                                                : `https://voyager.online/tx/${tx.tx_hash}`;
-                                            Linking.openURL(url).catch((err) =>
-                                                console.error('Failed to open URL:', err)
-                                            );
-                                        }}
-                                    >
-                                        <Text style={styles.transactionType}>{tx.type}</Text>
-                                        <Text style={styles.transactionDetail}>
-                                            {tx.type === 'Account Creation'
-                                                ? tx.uid.slice(0, 4) + '...' + tx.uid.slice(-4)
-                                                : tx.tx_hash.slice(0, 4) + '...' + tx.tx_hash.slice(-4)}
+                        <ScrollView
+                            style={styles.transactionsList}
+                            contentContainerStyle={styles.transactionsContent}
+                            showsVerticalScrollIndicator={false}
+                        >
+                            {transaction.map((tx, index) => (
+                                <View key={index} style={styles.transactionItem}>
+                                    <View style={styles.transactionLeft}>
+                                        <TouchableOpacity
+                                            onPress={() => {
+                                                const url = tx.type === 'Account Creation'
+                                                    ? `https://voyager.online/contract/${wallet.address}`
+                                                    : `https://voyager.online/tx/${tx.tx_hash}`;
+                                                Linking.openURL(url).catch((err) =>
+                                                    console.error('Failed to open URL:', err)
+                                                );
+                                            }}
+                                        >
+                                            <Text style={styles.transactionType}>{tx.type}</Text>
+                                            <Text style={styles.transactionDetail}>
+                                                {tx.type === 'Account Creation'
+                                                    ? tx.uid.slice(0, 4) + '...' + tx.uid.slice(-4)
+                                                    : tx.tx_hash.slice(0, 4) + '...' + tx.tx_hash.slice(-4)}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                    <View style={styles.transactionRight}>
+                                        <Text
+                                            style={
+                                                tx.type === 'Deposit' || tx.type === 'Sell BTC' || tx.type === 'Close Investment'
+                                                    ? styles.transactionAmountPositive
+                                                    : styles.transactionAmountNegative
+                                            }
+                                        >
+                                            {tx.type === 'Deposit' || tx.type === 'Sell BTC' || tx.type === 'Close Investment' ? '+' : '-'}
+                                            {tx.amount.toFixed(2)} USDC
                                         </Text>
-                                    </TouchableOpacity>
+                                        <Text style={styles.transactionDate}>
+                                            {new Date(tx.created_at).toLocaleString('en-GB', {
+                                                day: '2-digit',
+                                                month: '2-digit',
+                                                year: 'numeric',
+                                                hour: '2-digit',
+                                                minute: '2-digit',
+                                                hour12: false,
+                                            })}
+                                        </Text>
+                                    </View>
                                 </View>
-                                <View style={styles.transactionRight}>
-                                    <Text
-                                        style={
-                                            tx.type === 'Deposit' || tx.type === 'Sell BTC' || tx.type === 'Close Investment'
-                                                ? styles.transactionAmountPositive
-                                                : styles.transactionAmountNegative
-                                        }
-                                    >
-                                        {tx.type === 'Deposit' || tx.type === 'Sell BTC' || tx.type === 'Close Investment' ? '+' : '-'}
-                                        {tx.amount.toFixed(2)} USD
-                                    </Text>
-                                    <Text style={styles.transactionDate}>
-                                        {new Date(tx.created_at).toLocaleString(undefined, {
-                                            year: 'numeric',
-                                            month: 'short',
-                                            day: 'numeric',
-                                            hour: '2-digit',
-                                            minute: '2-digit',
-                                            hour12: false,
-                                        })}
-                                    </Text>
-                                </View>
-                            </View>
-                        ))}
-                    </ScrollView>
+                            ))}
+                        </ScrollView>
+                    </View>
                 </View>
             </ScrollView>
         </SafeAreaView>
@@ -202,7 +232,7 @@ export default function Dashboard() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#11110E',
+        backgroundColor: '#000000',
         paddingHorizontal: moderateScale(20),
         paddingTop: Platform.OS === 'android' ? verticalScale(20) : 0,
     },
@@ -210,115 +240,93 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     scrollContent: {
-        paddingBottom: verticalScale(80),
+        paddingBottom: verticalScale(120), // Más espacio para el bottom tab
     },
     cardContainer: {
-        backgroundColor: '#000',
-        height: verticalScale(120),
-        borderRadius: moderateScale(10),
-        justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: verticalScale(30),
-        position: 'relative',
-        overflow: 'hidden',
-        marginHorizontal: width * 0.20,
-        marginTop: moderateScale(20),
-        borderWidth: 1,
-        borderColor: 'FFFFE3',
+        marginBottom: verticalScale(40),
+        marginTop: verticalScale(20),
     },
-    cardText: {
-        color: '#FFFFE3',
-        fontSize: moderateScale(18),
-    },
-    visaLogo: {
-        position: 'absolute',
-        width: moderateScale(30),
-        height: moderateScale(10),
-        right: moderateScale(20),
-        bottom: moderateScale(20),
+    visaCard: {
+        width: width * 0.85, // 85% del ancho de pantalla
+        height: verticalScale(200), // Altura ajustada
     },
     balanceSection: {
-        marginBottom: verticalScale(30),
-        alignSelf: 'center',
+        marginBottom: verticalScale(40),
+        alignItems: 'center',
     },
     balanceLabel: {
-        color: '#555',
-        fontSize: moderateScale(14),
+        color: '#666',
+        fontSize: moderateScale(12),
         marginBottom: verticalScale(8),
-        alignSelf: 'center'
+        letterSpacing: 1,
     },
     balanceAmount: {
-        color: '#FFFFE3',
-        fontSize: moderateScale(36),
-        fontWeight: '100',
-        alignSelf: 'center',
+        color: '#EAE5DC',
+        fontSize: moderateScale(42),
+        fontWeight: '300',
         fontFamily: 'JetBrainsMono_400Regular'
     },
     actionButtons: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: verticalScale(40),
-        marginHorizontal: width * 0.05, // Ajustado para acomodar tres botones
+        justifyContent: 'center',
+        marginBottom: verticalScale(50),
+        paddingHorizontal: width * 0.1,
+        gap: moderateScale(20),
     },
     buyButton: {
         flex: 1,
-        paddingVertical: verticalScale(12),
+        paddingVertical: verticalScale(16),
         borderWidth: 1,
-        borderColor: '#FFFFE3',
+        borderColor: '#EAE5DC',
+        borderRadius: moderateScale(8),
         alignItems: 'center',
         justifyContent: 'center',
-        marginRight: moderateScale(10),
     },
     buyButtonText: {
-        color: '#FFFFE3',
+        color: '#EAE5DC',
         fontSize: moderateScale(16),
+        fontWeight: '500',
     },
-    investButton: {
+    sellButton: {
         flex: 1,
-        paddingVertical: verticalScale(12),
-        backgroundColor: '#FFFFE3',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginHorizontal: moderateScale(10),
-    },
-    investButtonText: {
-        color: '#11110E',
-        fontSize: moderateScale(16),
-    },
-    sendButton: {
-        flex: 1,
-        paddingVertical: verticalScale(12),
+        paddingVertical: verticalScale(16),
         borderWidth: 1,
-        borderColor: '#FFFFE3',
+        borderColor: '#EAE5DC',
+        borderRadius: moderateScale(8),
         alignItems: 'center',
         justifyContent: 'center',
     },
-    sendButtonText: {
-        color: '#FFFFE3',
+    sellButtonText: {
+        color: '#EAE5DC',
         fontSize: moderateScale(16),
+        fontWeight: '500',
     },
     transactionsSection: {
         flex: 1,
-        marginHorizontal: moderateScale(20),
-        marginBottom: verticalScale(10),
+        paddingHorizontal: moderateScale(0),
+        paddingTop: verticalScale(80),
     },
     transactionsTitle: {
-        color: '#555',
-        fontSize: moderateScale(14),
-        marginBottom: verticalScale(15),
+        color: '#666',
+        fontSize: moderateScale(12),
+        marginBottom: verticalScale(20),
+        letterSpacing: 1,
+        paddingLeft: moderateScale(30),
     },
     transactionsList: {
         flex: 1,
+        paddingHorizontal: moderateScale(30),
     },
     transactionsContent: {
-        paddingBottom: verticalScale(80),
+        paddingBottom: verticalScale(100),
     },
     transactionItem: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        paddingVertical: verticalScale(15),
+        paddingVertical: verticalScale(16),
         borderBottomWidth: 1,
-        borderBottomColor: '#333',
+        borderBottomColor: '#222',
     },
     transactionLeft: {
         flex: 1,
@@ -328,55 +336,46 @@ const styles = StyleSheet.create({
         alignItems: 'flex-end',
     },
     transactionType: {
-        color: '#FFFFE3',
+        color: '#EAE5DC',
         fontSize: moderateScale(16),
         fontWeight: '500',
-        marginBottom: verticalScale(5),
+        marginBottom: verticalScale(4),
     },
     transactionDetail: {
-        color: '#555',
-        fontSize: moderateScale(14),
+        color: '#666',
+        fontSize: moderateScale(12),
         fontFamily: 'JetBrainsMono_400Regular'
     },
     transactionAmountPositive: {
-        color: '#4CAF50',
+        color: '#00C851',
         fontSize: moderateScale(16),
         fontWeight: '500',
-        marginBottom: verticalScale(5),
+        marginBottom: verticalScale(4),
         fontFamily: 'JetBrainsMono_400Regular'
     },
     transactionAmountNegative: {
-        color: '#F44336',
+        color: '#FF4444',
         fontSize: moderateScale(16),
         fontWeight: '500',
-        marginBottom: verticalScale(5),
+        marginBottom: verticalScale(4),
         fontFamily: 'JetBrainsMono_400Regular'
     },
     transactionDate: {
-        color: '#555',
-        fontSize: moderateScale(14),
+        color: '#666',
+        fontSize: moderateScale(12),
         fontFamily: 'JetBrainsMono_400Regular'
     },
-    loadingOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        position: 'absolute',
+    section: {
         width: '100%',
-        height: '100%',
-        zIndex: 999,
-    },
-    loadingContainer: {
-        backgroundColor: '#11110E',
-        padding: 20,
-        borderRadius: 10,
-        alignItems: 'center',
         justifyContent: 'center',
     },
-    loadingText: {
-        color: '#FFFFE3',
-        marginTop: 10,
-        fontSize: 16,
+    scrollHintContainer: {
+        alignItems: 'center',
+        marginBottom: verticalScale(90),
+    },
+    scrollHintText: {
+        color: '#666',
+        fontSize: moderateScale(14),
+        fontStyle: 'italic',
     },
 });

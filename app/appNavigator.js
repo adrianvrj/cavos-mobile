@@ -8,7 +8,6 @@ import Pin from './auth/Pin';
 import Dashboard from './Dashboard';
 import Investments from './Investments';
 import BitcoinAccount from './BitcoinAccount';
-import Referral from './auth/Referral';
 import PhoneLogin from './auth/phone/PhoneLogin';
 import PhoneOTP from './auth/phone/PhoneOTP';
 import BuyBTC from './btc/BuyBTC';
@@ -20,6 +19,9 @@ import Buy from './Buy';
 import Send from './Send';
 import Invest from './Invest';
 import Invitation from './auth/Invitation';
+import Profile from './Profile';
+import ContactList from './social/ContactList';
+import Referral from './Referral';
 
 const Stack = createNativeStackNavigator();
 
@@ -45,7 +47,7 @@ export default function AppNavigator() {
   if (!initialRoute) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#11110E' }}>
-        <ActivityIndicator size="large" color="#FFFFE3" />
+        <ActivityIndicator size="large" color="#EAE5DC" />
       </View>
     );
   }
@@ -59,7 +61,6 @@ export default function AppNavigator() {
         <Stack.Screen name="Login" component={Login} />
         <Stack.Screen name="Pin" component={Pin} initialParams={false} />
         <Stack.Screen name="BottomMenu" component={BottomMenu} />
-        <Stack.Screen name="Referral" component={Referral} />
         <Stack.Screen name="BuyBTC" component={BuyBTC} />
         <Stack.Screen name="SellBTC" component={SellBTC} />
         <Stack.Screen name="InvestBTC" component={InvestBTC} />
@@ -69,6 +70,9 @@ export default function AppNavigator() {
         <Stack.Screen name="Send" component={Send} />
         <Stack.Screen name="Invest" component={Invest} />
         <Stack.Screen name="Invitation" component={Invitation} />
+        <Stack.Screen name="Profile" component={Profile} />
+        <Stack.Screen name="ContactList" component={ContactList} />
+        <Stack.Screen name="Referral" component={Referral} />
       </Stack.Navigator>
     </Providers>
   );

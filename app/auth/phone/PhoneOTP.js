@@ -7,7 +7,9 @@ import {
     SafeAreaView,
     Dimensions,
     Platform,
-    Alert
+    Alert,
+    Keyboard,
+    TouchableWithoutFeedback
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import * as Font from 'expo-font';
@@ -93,78 +95,83 @@ export default function PhoneOTP() {
         setResendEnabled(false);
         setOtp('');
         const { data, error } = await supabase.auth.signInWithOtp({
-            phone: countryCode + phoneNumber,
+            phone: phoneNumber,
         });
         Alert.alert('Code Sent', 'A new verification code has been sent to your phone');
     };
 
+    const dismissKeyboard = () => {
+        Keyboard.dismiss();
+    };
+
     return (
-        <SafeAreaView style={styles.container}>
-            <Header />
+        <TouchableWithoutFeedback onPress={dismissKeyboard}>
+            <SafeAreaView style={styles.container}>
+                <Header />
 
-            {/* Content */}
-            <View style={styles.content}>
-                {/* Title Section */}
-                <View style={styles.titleContainer}>
-                    <Text style={styles.title}>Enter Verification Code</Text>
-                    <Text style={styles.subtitle}>
-                        Sent to {phoneNumber}
-                    </Text>
-                </View>
-
-                {/* OTP Input */}
-                <View style={styles.otpContainer}>
-                    <OTPInputView
-                        ref={otpInputRef}
-                        style={styles.otpInput}
-                        pinCount={6}
-                        code={otp}
-                        onCodeChanged={code => {
-                            setOtp(code);
-                            if (code.length === 6) {
-                                handleVerify(code);
-                            }
-                        }}
-                        autoFocusOnLoad
-                        codeInputFieldStyle={styles.underlineStyleBase}
-                        codeInputHighlightStyle={styles.underlineStyleHighLighted}
-                    // Remove onCodeFilled and handle it in onCodeChanged
-                    />
-                </View>
-
-                {/* Timer/Resend */}
-                <View style={styles.resendContainer}>
-                    {resendEnabled ? (
-                        <TouchableOpacity onPress={handleResend}>
-                            <Text style={styles.resendText}>Resend Code</Text>
-                        </TouchableOpacity>
-                    ) : (
-                        <Text style={styles.timerText}>
-                            Resend code in 0:{timer < 10 ? `0${timer}` : timer}
+                {/* Content */}
+                <View style={styles.content}>
+                    {/* Title Section */}
+                    <View style={styles.titleContainer}>
+                        <Text style={styles.title}>Enter Verification Code</Text>
+                        <Text style={styles.subtitle}>
+                            Sent to {phoneNumber}
                         </Text>
-                    )}
-                </View>
+                    </View>
 
-                {/* Verify Button - now using manual verification */}
-                <TouchableOpacity
-                    style={[
-                        styles.verifyButton,
-                        otp.length < 6 && styles.disabledButton
-                    ]}
-                    onPress={() => handleVerify(otp)}
-                    disabled={otp.length < 6}
-                >
-                    <Text style={styles.verifyButtonText}>Verify</Text>
-                </TouchableOpacity>
-            </View>
-        </SafeAreaView>
+                    {/* OTP Input */}
+                    <View style={styles.otpContainer}>
+                        <OTPInputView
+                            ref={otpInputRef}
+                            style={styles.otpInput}
+                            pinCount={6}
+                            code={otp}
+                            onCodeChanged={code => {
+                                setOtp(code);
+                                if (code.length === 6) {
+                                    handleVerify(code);
+                                }
+                            }}
+                            autoFocusOnLoad
+                            codeInputFieldStyle={styles.underlineStyleBase}
+                            codeInputHighlightStyle={styles.underlineStyleHighLighted}
+                        />
+                    </View>
+
+                    {/* Timer/Resend */}
+                    <View style={styles.resendContainer}>
+                        {resendEnabled ? (
+                            <TouchableOpacity onPress={handleResend}>
+                                <Text style={styles.resendText}>Resend Code</Text>
+                            </TouchableOpacity>
+                        ) : (
+                            <Text style={styles.timerText}>
+                                Resend code in 0:{timer < 10 ? `0${timer}` : timer}
+                            </Text>
+                        )}
+                    </View>
+
+                    {/* Verify Button */}
+                    <TouchableOpacity
+                        style={[
+                            styles.verifyButton,
+                            otp.length < 6 && styles.disabledButton
+                        ]}
+                        onPress={() => handleVerify(otp)}
+                        disabled={otp.length < 6}
+                    >
+                        <Text style={styles.verifyButtonText}>Verify</Text>
+                    </TouchableOpacity>
+                </View>
+            </SafeAreaView>
+        </TouchableWithoutFeedback>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#11110E',
+        backgroundColor: '#000000',
         paddingTop: Platform.OS === 'android' ? verticalScale(20) : 0,
     },
     content: {
@@ -177,13 +184,13 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     title: {
-        color: '#FFFFE3',
+        color: '#EAE5DC',
         fontSize: moderateScale(28),
         fontWeight: 'bold',
         marginBottom: verticalScale(5),
     },
     subtitle: {
-        color: '#555',
+        color: '#888',
         fontSize: moderateScale(16),
         textAlign: 'center',
     },
@@ -200,29 +207,29 @@ const styles = StyleSheet.create({
         height: moderateScale(55),
         borderWidth: 1,
         borderColor: '#333',
-        color: '#FFFFE3',
+        color: '#EAE5DC',
         fontSize: moderateScale(24),
         fontFamily: 'JetBrainsMono_400Regular',
     },
     underlineStyleHighLighted: {
-        borderColor: '#FFFFE3',
+        borderColor: '#EAE5DC',
     },
     resendContainer: {
         alignItems: 'center',
         marginBottom: verticalScale(30),
     },
     resendText: {
-        color: '#FFFFE3',
+        color: '#EAE5DC',
         fontSize: moderateScale(16),
         textDecorationLine: 'underline',
     },
     timerText: {
-        color: '#555',
+        color: '#888',
         fontSize: moderateScale(16),
     },
     verifyButton: {
-        backgroundColor: '#FFFFE3',
-        borderRadius: moderateScale(10),
+        backgroundColor: '#EAE5DC',
+        borderRadius: moderateScale(8),
         padding: moderateScale(16),
         alignItems: 'center',
     },
@@ -230,7 +237,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#333',
     },
     verifyButtonText: {
-        color: '#11110E',
+        color: '#000000',
         fontSize: moderateScale(16),
         fontWeight: 'bold',
     },

@@ -85,7 +85,7 @@ export default function PhoneLogin() {
                     <TextInput
                         style={styles.phoneInput}
                         placeholder="Phone number"
-                        placeholderTextColor="#555"
+                        placeholderTextColor="#888"
                         keyboardType="phone-pad"
                         value={phoneNumber}
                         onChangeText={setPhoneNumber}
@@ -113,7 +113,7 @@ export default function PhoneLogin() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#11110E',
+        backgroundColor: '#000000',
         paddingTop: Platform.OS === 'android' ? verticalScale(20) : 0,
     },
     content: {
@@ -125,18 +125,18 @@ const styles = StyleSheet.create({
         marginBottom: verticalScale(40),
     },
     title: {
-        color: '#FFFFE3',
+        color: '#EAE5DC',
         fontSize: moderateScale(28),
         fontWeight: 'bold',
         marginBottom: verticalScale(5),
     },
     subtitle: {
-        color: '#555',
+        color: '#888',
         fontSize: moderateScale(16),
     },
     phoneInputContainer: {
         flexDirection: 'row',
-        backgroundColor: '#000',
+        backgroundColor: '#111',
         borderRadius: moderateScale(10),
         padding: moderateScale(15),
         marginBottom: verticalScale(30),
@@ -150,20 +150,21 @@ const styles = StyleSheet.create({
         marginRight: moderateScale(15),
     },
     countryCodeInput: {
-        color: '#FFFFE3',
+        color: '#EAE5DC',
         fontSize: moderateScale(16),
         fontFamily: 'JetBrainsMono_400Regular',
         minWidth: moderateScale(40),
     },
     phoneInput: {
         flex: 1,
-        color: '#FFFFE3',
+        color: '#EAE5DC',
         fontSize: moderateScale(16),
         fontFamily: 'JetBrainsMono_400Regular',
     },
     continueButton: {
-        backgroundColor: '#FFFFE3',
+        backgroundColor: '#EAE5DC',
         padding: moderateScale(16),
+        borderRadius: moderateScale(8),
         alignItems: 'center',
         marginBottom: verticalScale(20),
     },
@@ -171,24 +172,8 @@ const styles = StyleSheet.create({
         backgroundColor: '#333',
     },
     continueButtonText: {
-        color: '#11110E',
+        color: '#000000',
         fontSize: moderateScale(16),
         fontWeight: 'bold',
-    },
-    alternativeOptions: {
-        alignItems: 'center',
-    },
-    orText: {
-        color: '#555',
-        fontSize: moderateScale(14),
-        marginBottom: verticalScale(15),
-    },
-    emailOption: {
-        padding: moderateScale(10),
-    },
-    emailOptionText: {
-        color: '#FFFFE3',
-        fontSize: moderateScale(16),
-        textDecorationLine: 'underline',
     },
 });

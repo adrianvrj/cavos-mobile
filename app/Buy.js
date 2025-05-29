@@ -16,6 +16,7 @@ import Header from './components/Header';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useWallet } from '../atoms/wallet';
 import * as Clipboard from 'expo-clipboard';
+import LoggedHeader from './components/LoggedHeader';
 
 const { width, height } = Dimensions.get('window');
 
@@ -52,29 +53,48 @@ export default function Buy() {
         Alert.alert('Copied!', 'Wallet address copied to clipboard.');
     };
 
+    const handleBankTransfer = () => {
+        Alert.alert('Coming soon', 'Bank transfer is a feature in development.');
+    };
+
     return (
         <SafeAreaView style={styles.container}>
-            {/* Header with Back Button */}
-            <Header showBackButton={true} />
-
-            {/* Main Content */}
             <ScrollView
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
             >
+                {/* Action Buttons */}
+                <View style={styles.actionButtons}>
+                    <TouchableOpacity style={styles.bankButton} onPress={handleBankTransfer}>
+                        <Text style={styles.bankButtonText}>Bank Transfer</Text>
+                    </TouchableOpacity>
+                </View>
+
+                {/* Texto "Or" entre Bank Transfer y Deposit Address */}
+                <View style={styles.orContainer}>
+                    <Text style={styles.orText}>Or</Text>
+                </View>
 
                 {/* Wallet Address Card */}
-                <View style={styles.card}>
-                    <Text style={styles.cardTitle}>YOUR DEPOSIT ADDRESS</Text>
-
-                    <View style={styles.addressContainer}>
-                        <Text style={styles.addressText} numberOfLines={1} ellipsizeMode="middle">
-                            {walletAddress}
-                        </Text>
-                        <TouchableOpacity style={styles.copyButton} onPress={handleCopyAddress}>
-                            <MaterialIcons name="content-copy" size={moderateScale(20)} color="#FFFFE3" />
-                        </TouchableOpacity>
+                <View style={styles.cardContainer}>
+                    <View style={styles.card}>
+                        <Text style={styles.cardTitle}>YOUR DEPOSIT ADDRESS</Text>
+                        <View style={styles.addressContainer}>
+                            <Text style={styles.addressText} numberOfLines={1} ellipsizeMode="middle">
+                                {walletAddress}
+                            </Text>
+                            <TouchableOpacity style={styles.copyButton} onPress={handleCopyAddress}>
+                                <MaterialIcons name="content-copy" size={moderateScale(20)} color="#EAE5DC" />
+                            </TouchableOpacity>
+                        </View>
                     </View>
+                </View>
+
+                {/* Texto para invitar a scrollear */}
+                <View style={styles.scrollHintContainer}>
+                    <Text style={styles.scrollHintText}>
+                        Only send USDC or USDT from supported networks.
+                    </Text>
                 </View>
 
                 {/* Important Notes */}
@@ -104,7 +124,7 @@ export default function Buy() {
                             <MaterialIcons name="warning" size={moderateScale(20)} color="#F44336" />
                         </View>
                         <Text style={styles.noteText}>
-                            Do not send from exchanges that don't allow withdrawals to smart contracts
+                            Do not send from exchanges that don't allow withdrawals to smart contracts.
                         </Text>
                     </View>
                 </View>
@@ -128,55 +148,48 @@ export default function Buy() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#11110E',
+        backgroundColor: '#000000',
+        paddingHorizontal: moderateScale(20),
         paddingTop: Platform.OS === 'android' ? verticalScale(20) : 0,
     },
     scrollContent: {
-        paddingHorizontal: moderateScale(20),
-        paddingBottom: verticalScale(100),
+        paddingBottom: verticalScale(120),
+        paddingTop: verticalScale(10),
+        marginTop: verticalScale(60),
     },
-    titleContainer: {
-        marginBottom: verticalScale(30),
-    },
-    title: {
-        color: '#FFFFE3',
-        fontSize: moderateScale(28),
-        fontWeight: 'bold',
-        marginBottom: verticalScale(5),
-    },
-    subtitle: {
-        color: '#555',
-        fontSize: moderateScale(16),
-    },
-    sectionTitle: {
-        color: '#FFFFE3',
-        marginBottom: 10,
-        fontWeight: 'bold',
+    cardContainer: {
+        alignItems: 'center',
+        marginBottom: verticalScale(40),
+        marginTop: verticalScale(20),
     },
     card: {
-        backgroundColor: '#000',
+        backgroundColor: '#11110E',
         borderRadius: moderateScale(10),
         padding: moderateScale(20),
-        marginBottom: verticalScale(30),
+        width: '100%',
+        maxWidth: 420,
+        borderWidth: 1,
+        borderColor: '#222',
     },
     cardTitle: {
-        color: '#555',
-        fontSize: moderateScale(14),
-        marginBottom: verticalScale(15),
+        color: '#666',
+        fontSize: moderateScale(12),
+        marginBottom: verticalScale(8),
+        letterSpacing: 1,
     },
     addressContainer: {
         flexDirection: 'row',
-        backgroundColor: '#11110E',
+        backgroundColor: '#000',
         borderRadius: moderateScale(8),
         padding: moderateScale(15),
-        marginBottom: verticalScale(20),
+        marginBottom: verticalScale(10),
         alignItems: 'center',
         borderWidth: 1,
         borderColor: '#333',
     },
     addressText: {
         flex: 1,
-        color: '#FFFFE3',
+        color: '#EAE5DC',
         fontSize: moderateScale(14),
         fontFamily: 'JetBrainsMono_400Regular',
     },
@@ -184,8 +197,80 @@ const styles = StyleSheet.create({
         padding: moderateScale(5),
         marginLeft: moderateScale(10),
     },
+    balanceSection: {
+        marginBottom: verticalScale(40),
+        alignItems: 'center',
+    },
+    balanceLabel: {
+        color: '#666',
+        fontSize: moderateScale(12),
+        marginBottom: verticalScale(8),
+        letterSpacing: 1,
+    },
+    balanceAmount: {
+        color: '#EAE5DC',
+        fontSize: moderateScale(32),
+        fontWeight: '300',
+        fontFamily: 'JetBrainsMono_400Regular'
+    },
+    actionButtons: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        marginBottom: verticalScale(30),
+        paddingHorizontal: width * 0.05,
+        gap: moderateScale(20),
+    },
+    buyButton: {
+        flex: 1,
+        paddingVertical: verticalScale(16),
+        borderWidth: 1,
+        borderColor: '#EAE5DC',
+        borderRadius: moderateScale(8),
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#11110E',
+    },
+    buyButtonText: {
+        color: '#EAE5DC',
+        fontSize: moderateScale(16),
+        fontWeight: '500',
+    },
+    bankButton: {
+        flex: 1,
+        paddingVertical: verticalScale(16),
+        borderWidth: 1,
+        borderColor: '#EAE5DC',
+        borderRadius: moderateScale(8),
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#000000',
+    },
+    bankButtonText: {
+        color: '#EAE5DC',
+        fontSize: moderateScale(16),
+        fontWeight: '500',
+    },
+    scrollHintContainer: {
+        alignItems: 'center',
+        marginBottom: verticalScale(30),
+        paddingHorizontal: moderateScale(10),
+    },
+    scrollHintText: {
+        color: '#666',
+        fontSize: moderateScale(14),
+        fontStyle: 'italic',
+        textAlign: 'center',
+    },
     notesContainer: {
         marginBottom: verticalScale(30),
+        paddingHorizontal: moderateScale(10),
+    },
+    sectionTitle: {
+        color: '#EAE5DC',
+        marginBottom: 10,
+        fontWeight: 'bold',
+        fontSize: moderateScale(14),
+        letterSpacing: 1,
     },
     noteItem: {
         flexDirection: 'row',
@@ -198,12 +283,13 @@ const styles = StyleSheet.create({
     },
     noteText: {
         flex: 1,
-        color: '#FFFFE3',
+        color: '#EAE5DC',
         fontSize: moderateScale(14),
         lineHeight: moderateScale(20),
     },
     networkInfo: {
         marginBottom: verticalScale(20),
+        paddingHorizontal: moderateScale(10),
     },
     networkContainer: {
         flexDirection: 'row',
@@ -220,7 +306,17 @@ const styles = StyleSheet.create({
         borderColor: '#333',
     },
     networkText: {
-        color: '#FFFFE3',
+        color: '#EAE5DC',
         fontSize: moderateScale(14),
+    },
+    orContainer: {
+        alignItems: 'center',
+        marginBottom: verticalScale(10),
+    },
+    orText: {
+        color: '#666',
+        fontSize: moderateScale(16),
+        fontWeight: '400',
+        letterSpacing: 1,
     },
 });

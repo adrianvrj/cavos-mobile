@@ -242,7 +242,10 @@ export default function Pin() {
                 }
                 else {
                     setWallet(userData);
-                    navigation.navigate('BottomMenu');
+                    navigation.reset({
+                        index: 0,
+                        routes: [{ name: 'BottomMenu' }],
+                    });
                 }
             }
         } catch (err) {
@@ -321,7 +324,7 @@ export default function Pin() {
                     </View>
                     <View style={styles.numberRow}>
                         <TouchableOpacity style={styles.emptyButton} disabled>
-                            <MaterialIcons name="fingerprint" size={moderateScale(24)} color="#555" />
+                            <MaterialIcons name="fingerprint" size={moderateScale(24)} color="#888" />
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={styles.numberButton}
@@ -333,7 +336,7 @@ export default function Pin() {
                             style={styles.emptyButton}
                             onPress={handleDelete}
                         >
-                            <MaterialIcons name="backspace" size={moderateScale(24)} color="#FFFFE3" />
+                            <MaterialIcons name="backspace" size={moderateScale(24)} color="#EAE5DC" />
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -353,7 +356,7 @@ export default function Pin() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#11110E',
+        backgroundColor: '#000000',
         paddingTop: Platform.OS === 'android' ? verticalScale(20) : 0,
     },
     content: {
@@ -363,7 +366,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: moderateScale(20),
     },
     title: {
-        color: '#FFFFE3',
+        color: '#EAE5DC',
         fontSize: moderateScale(24),
         fontWeight: 'bold',
         marginBottom: verticalScale(10),
@@ -382,12 +385,12 @@ const styles = StyleSheet.create({
         height: moderateScale(16),
         borderRadius: moderateScale(8),
         borderWidth: 1,
-        borderColor: '#555',
+        borderColor: '#888',
         marginHorizontal: moderateScale(10),
     },
     pinDotFilled: {
-        backgroundColor: '#FFFFE3',
-        borderColor: '#FFFFE3',
+        backgroundColor: '#EAE5DC',
+        borderColor: '#EAE5DC',
     },
     pinDotError: {
         borderColor: '#F44336',
@@ -404,9 +407,10 @@ const styles = StyleSheet.create({
     numberButton: {
         width: moderateScale(70),
         height: moderateScale(70),
-        backgroundColor: '#000',
+        backgroundColor: '#111',
         justifyContent: 'center',
         alignItems: 'center',
+        borderRadius: moderateScale(35),
         borderWidth: 1,
         borderColor: '#333',
     },
@@ -417,14 +421,14 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     numberText: {
-        color: '#FFFFE3',
+        color: '#EAE5DC',
         fontSize: moderateScale(24),
     },
     forgotPinButton: {
         marginTop: verticalScale(30),
     },
     forgotPinText: {
-        color: '#555',
+        color: '#888',
         fontSize: moderateScale(14),
     },
 });

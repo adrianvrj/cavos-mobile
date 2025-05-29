@@ -155,7 +155,6 @@ export default function InvestBTC() {
     return (
         <SafeAreaView style={styles.container}>
             {isLoading && <LoadingModal />}
-            <Header showBackButton={true} onBackPress={() => navigation.goBack()} />
 
             <ScrollView
                 contentContainerStyle={styles.scrollContent}
@@ -184,7 +183,7 @@ export default function InvestBTC() {
                             keyboardType="decimal-pad"
                             value={btcAmount}
                             onChangeText={handleChangeAmount}
-                            selectionColor="#FFFFE3"
+                            selectionColor="#EAE5DC"
                         />
                         <TouchableOpacity
                             style={styles.maxButton}
@@ -236,12 +235,13 @@ export default function InvestBTC() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#11110E',
+        backgroundColor: '#000000',
         paddingTop: Platform.OS === 'android' ? 20 : 0,
     },
     scrollContent: {
         paddingHorizontal: 20,
         paddingBottom: 100,
+        marginTop: 20,
     },
     balanceCard: {
         backgroundColor: '#000',
@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
     balanceAmount: {
-        color: '#FFFFE3',
+        color: '#EAE5DC',
         fontSize: 36,
         fontWeight: '100',
         fontFamily: 'JetBrainsMono_400Regular',
@@ -272,7 +272,7 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
     btcPriceAmount: {
-        color: '#FFFFE3',
+        color: '#EAE5DC',
         fontSize: 24,
         fontWeight: '100',
         fontFamily: 'JetBrainsMono_400Regular',
@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
     },
     amountInput: {
         flex: 1,
-        color: '#FFFFE3',
+        color: '#EAE5DC',
         fontSize: 24,
         padding: 0,
         fontFamily: 'JetBrainsMono_400Regular',
@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
         marginLeft: 10,
     },
     maxButtonText: {
-        color: '#FFFFE3',
+        color: '#EAE5DC',
         fontSize: 14,
         fontWeight: 'bold',
     },
@@ -329,12 +329,12 @@ const styles = StyleSheet.create({
         fontSize: 14,
     },
     summaryValue: {
-        color: '#FFFFE3',
+        color: '#EAE5DC',
         fontSize: 14,
         fontFamily: 'JetBrainsMono_400Regular',
     },
     investButton: {
-        backgroundColor: '#FFFFE3',
+        backgroundColor: '#EAE5DC',
         padding: 16,
         alignItems: 'center',
         marginBottom: 20,

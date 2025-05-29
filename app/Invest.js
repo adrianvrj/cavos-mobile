@@ -184,7 +184,7 @@ export default function Invest() {
                             keyboardType="decimal-pad"
                             value={investmentAmount}
                             onChangeText={handleChangeAmount}
-                            selectionColor="#FFFFE3"
+                            selectionColor="#EAE5DC"
                             step="0.01"
                         />
                         <TouchableOpacity
@@ -248,7 +248,7 @@ const styles = StyleSheet.create({
         marginBottom: verticalScale(30),
     },
     title: {
-        color: '#FFFFE3',
+        color: '#EAE5DC',
         fontSize: moderateScale(28),
         fontWeight: 'bold',
         marginBottom: verticalScale(5),
@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
         marginBottom: verticalScale(8),
     },
     balanceAmount: {
-        color: '#FFFFE3',
+        color: '#EAE5DC',
         fontSize: moderateScale(36),
         fontWeight: '100',
         fontFamily: 'JetBrainsMono_400Regular'
@@ -293,13 +293,13 @@ const styles = StyleSheet.create({
         borderColor: '#333',
     },
     currencySymbol: {
-        color: '#FFFFE3',
+        color: '#EAE5DC',
         fontSize: moderateScale(24),
         marginRight: moderateScale(10),
     },
     amountInput: {
         flex: 1,
-        color: '#FFFFE3',
+        color: '#EAE5DC',
         fontSize: moderateScale(24),
         fontFamily: 'JetBrainsMono_400Regular',
         padding: 0,
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
         marginLeft: moderateScale(10),
     },
     maxButtonText: {
-        color: '#FFFFE3',
+        color: '#EAE5DC',
         fontSize: moderateScale(14),
         fontWeight: 'bold',
     },
@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     poolName: {
-        color: '#FFFFE3',
+        color: '#EAE5DC',
         fontSize: moderateScale(18),
         marginBottom: verticalScale(5),
     },
@@ -367,12 +367,12 @@ const styles = StyleSheet.create({
         fontSize: moderateScale(14),
     },
     summaryValue: {
-        color: '#FFFFE3',
+        color: '#EAE5DC',
         fontSize: moderateScale(14),
         fontFamily: 'JetBrainsMono_400Regular',
     },
     investButton: {
-        backgroundColor: '#FFFFE3',
+        backgroundColor: '#EAE5DC',
         padding: moderateScale(16),
         alignItems: 'center',
         marginBottom: verticalScale(20),
@@ -408,7 +408,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     loadingText: {
-        color: '#FFFFE3',
+        color: '#EAE5DC',
         marginTop: 10,
         fontSize: 16,
     },
