@@ -56,6 +56,7 @@ export default function Investments() {
                 wallet_provider_api + 'vesu/pool/apy',
                 {
                     poolName: "Re7 USDC",
+                    assetSymbol: "USDC"
                 },
                 {
                     headers: {
@@ -319,9 +320,6 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '500',
     },
-    actionButtons: {
-        marginVertical: 20,
-    },
     newInvestButton: {
         paddingVertical: 16,
         borderWidth: 1,
@@ -330,6 +328,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         marginBottom: 15,
         marginHorizontal: 25,
+        borderRadius: 6,
     },
     newInvestButtonText: {
         color: '#EAE5DC',

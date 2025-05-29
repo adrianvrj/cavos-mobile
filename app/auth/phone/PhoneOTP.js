@@ -66,6 +66,30 @@ export default function PhoneOTP() {
         }
     }, [timer, resendEnabled]);
 
+    const hasWallet = async (userId) => {
+        try {
+            const { data, error } = await supabase
+                .from('user_wallet')
+                .select('*')
+                .eq('uid', userId)
+                .single();
+            if (error) {
+                console.error('Error fetching wallet info:', error);
+                Alert.alert('Error', 'Failed to fetch wallet information.');
+            } else {
+                if (data) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        } catch (error) {
+            console.error('Error checking wallet:', error);
+            Alert.alert('Error', 'An error occurred while checking wallet information.');
+            return false;
+        }
+    };
+
     const handleVerify = async (code) => {
         const { data, error } = await supabase.auth.verifyOtp({
             phone: phoneNumber,
@@ -85,7 +109,12 @@ export default function PhoneOTP() {
                 navigation.navigate('Pin', { isReset: true });
             }
             else {
-                navigation.navigate('Invitation', { isReset: false });
+                if (!await hasWallet(data.user.id)) {
+                    navigation.navigate('Invitation', { isReset: false });
+                }
+                else {
+                    navigation.navigate('Pin');
+                }
             }
         }
     };

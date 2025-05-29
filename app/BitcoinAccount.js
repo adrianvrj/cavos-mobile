@@ -77,7 +77,8 @@ export default function BitcoinAccount() {
                 const apyResponse = await axios.post(
                     wallet_provider_api + 'vesu/pool/apy',
                     {
-                        poolName: "Re7 USDC",
+                        poolName: "Genesis",
+                        assetSymbol: "WBTC"
                     },
                     {
                         headers: {

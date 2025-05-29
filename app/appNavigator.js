@@ -28,6 +28,30 @@ const Stack = createNativeStackNavigator();
 export default function AppNavigator() {
   const [initialRoute, setInitialRoute] = useState(null);
 
+  const hasWallet = async (userId) => {
+    try {
+      const { data, error } = await supabase
+        .from('user_wallet')
+        .select('*')
+        .eq('uid', userId)
+        .single();
+      if (error) {
+        console.error('Error fetching wallet info:', error);
+        Alert.alert('Error', 'Failed to fetch wallet information.');
+      } else {
+        if (data) {
+          return true;
+        } else {
+          return false;
+        }
+      }
+    } catch (error) {
+      console.error('Error checking wallet:', error);
+      Alert.alert('Error', 'An error occurred while checking wallet information.');
+      return false;
+    }
+  };
+
   useEffect(() => {
     const checkSession = async () => {
       const {
@@ -35,7 +59,13 @@ export default function AppNavigator() {
       } = await supabase.auth.getSession();
 
       if (session) {
-        setInitialRoute('Pin');
+        const userId = session.user.id;
+        const hasUserWallet = await hasWallet(userId);
+        if (hasUserWallet) {
+          setInitialRoute('Pin');
+        } else {
+          setInitialRoute('Invitation');
+        }
       } else {
         setInitialRoute('Login');
       }
