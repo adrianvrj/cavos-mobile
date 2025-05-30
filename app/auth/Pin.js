@@ -195,6 +195,7 @@ export default function Pin() {
                             public_key: wallet_details.public_key,
                             private_key: wallet_details.private_key,
                             pin: hashedPin,
+                            phone: (await supabase.auth.getUser()).data.user.phone,
                         },
                     ]);
 

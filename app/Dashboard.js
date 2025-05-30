@@ -115,7 +115,6 @@ export default function UpdatedDashboard() {
             <ScrollView
                 ref={scrollViewRef}
                 style={styles.scrollView}
-                // contentContainerStyle={{ height: height * 2 }}
                 pagingEnabled
                 showsVerticalScrollIndicator={false}
                 onScroll={handleScroll}
@@ -131,14 +130,18 @@ export default function UpdatedDashboard() {
             >
                 {/* Sección principal */}
                 <View style={[styles.section]}>
-                    {/* Visa Card Image */}
-                    <View style={styles.cardContainer}>
+                    {/* Visa Card Image - ahora es Touchable */}
+                    <TouchableOpacity
+                        style={styles.cardContainer}
+                        activeOpacity={0.85}
+                        onPress={() => navigation.navigate('CardWaitlist')}
+                    >
                         <Image
-                            source={require('../assets/cavos-card.png')} // Reemplaza con el nombre de tu PNG
+                            source={require('../assets/cavos-card.png')}
                             style={styles.visaCard}
                             resizeMode="contain"
                         />
-                    </View>
+                    </TouchableOpacity>
 
                     {/* Balance Section */}
                     <View style={styles.balanceSection}>
@@ -162,7 +165,6 @@ export default function UpdatedDashboard() {
                             Scroll down to see your transaction history ↓
                         </Text>
                     </View>
-
                 </View>
 
                 {/* Sección de transacciones */}

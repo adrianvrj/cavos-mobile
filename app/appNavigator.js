@@ -22,6 +22,7 @@ import Invitation from './auth/Invitation';
 import Profile from './Profile';
 import ContactList from './social/ContactList';
 import Referral from './Referral';
+import CardWaitlist from './CardWaitlist';
 
 const Stack = createNativeStackNavigator();
 
@@ -103,6 +104,7 @@ export default function AppNavigator() {
         <Stack.Screen name="Profile" component={Profile} />
         <Stack.Screen name="ContactList" component={ContactList} />
         <Stack.Screen name="Referral" component={Referral} />
+        <Stack.Screen name="CardWaitlist" component={CardWaitlist} />
       </Stack.Navigator>
     </Providers>
   );
