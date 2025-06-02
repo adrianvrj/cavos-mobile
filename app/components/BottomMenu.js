@@ -7,8 +7,8 @@ import ZocialIcon from 'react-native-vector-icons/Zocial';
 import Dashboard from '../Dashboard';
 import Investments from '../Investments';
 import BitcoinAccount from '../BitcoinAccount';
-import ContactList from '../social/ContactList';
 import Referral from '../Referral';
+import Search from '../contacts/Search';
 
 const Tab = createBottomTabNavigator();
 
@@ -82,7 +82,7 @@ export default function StyledBottomMenu() {
       <Tab.Screen name="Dashboard" component={Dashboard} />
       <Tab.Screen name="Bitcoin" component={BitcoinAccount} />
       <Tab.Screen name="Investments" component={Investments} />
-      <Tab.Screen name="Search" component={ContactList} />
+      <Tab.Screen name="Search" component={Search} />
       <Tab.Screen name="Referral" component={Referral} />
     </Tab.Navigator>
   );

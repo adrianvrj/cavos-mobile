@@ -202,12 +202,12 @@ export default function UpdatedDashboard() {
                                     <View style={styles.transactionRight}>
                                         <Text
                                             style={
-                                                tx.type === 'Deposit' || tx.type === 'Sell BTC' || tx.type === 'Close Investment'
+                                                tx.type === 'Deposit' || tx.type === 'Sell BTC' || tx.type === 'Close Investment' || tx.type === 'Receive'
                                                     ? styles.transactionAmountPositive
                                                     : styles.transactionAmountNegative
                                             }
                                         >
-                                            {tx.type === 'Deposit' || tx.type === 'Sell BTC' || tx.type === 'Close Investment' ? '+' : '-'}
+                                            {tx.type === 'Deposit' || tx.type === 'Sell BTC' || tx.type === 'Close Investment' || tx.type === 'Receive' ? '+' : '-'}
                                             {tx.amount.toFixed(2)} USDC
                                         </Text>
                                         <Text style={styles.transactionDate}>

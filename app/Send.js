@@ -11,7 +11,7 @@ import {
     Platform,
     Alert,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import * as Font from 'expo-font';
 import { useFonts, JetBrainsMono_400Regular } from '@expo-google-fonts/jetbrains-mono';
 import Header from './components/Header';
@@ -31,6 +31,7 @@ const moderateScale = (size, factor = 0.5) => size + (scale(size) - size) * fact
 
 export default function Send() {
     const navigation = useNavigation();
+    const route = useRoute();
     const [amount, setAmount] = useState('');
     const [recipientAddress, setRecipientAddress] = useState('');
     const [balance, setBalance] = useState(0);
@@ -62,6 +63,16 @@ export default function Send() {
             getAccountInfo();
         }
     }, [wallet]);
+
+    useEffect(() => {
+        if (route.params?.recipientAddress) {
+            let addr = route.params.recipientAddress;
+            const addrFormatted = addr.startsWith('0x')
+                ? '0x' + addr.slice(2).padStart(64, '0')
+                : '0x' + addr.padStart(64, '0');
+            setRecipientAddress(addrFormatted);
+        }
+    }, [route.params?.recipientAddress]);
 
     const handleBack = () => {
         navigation.goBack();
@@ -130,7 +141,7 @@ export default function Send() {
 
                             const txHash = response.data.result;
 
-                            // Save transaction to database
+                            // Guarda la transacción del remitente (Send)
                             const { error: txError } = await supabase
                                 .from('transaction')
                                 .insert([
@@ -149,6 +160,32 @@ export default function Send() {
                                 return;
                             }
 
+                            let normalizedAddress = recipientAddress;
+                            if (normalizedAddress.startsWith('0x')) {
+                                normalizedAddress = '0x' + normalizedAddress.slice(2).replace(/^0+/, '');
+                            }
+
+                            const { data: recipientUser, error: recipientError } = await supabase
+                                .from('user_wallet')
+                                .select('uid')
+                                .eq('address', normalizedAddress)
+                                .single();
+                            console.log(normalizedAddress)
+                            console.log('Recipient User:', recipientUser.uid);
+                            if (recipientUser && recipientUser.uid) {
+                                const { error: txError } = await supabase
+                                    .from('transaction')
+                                    .insert([
+                                        {
+                                            uid: recipientUser.uid,
+                                            type: "Receive",
+                                            amount: amount,
+                                            tx_hash: txHash,
+                                        },
+                                    ]);
+                                console.log('Receive Transaction:', txError);
+                            }
+
                             setIsLoading(false);
                             Alert.alert('Success', `You've sent $${amount} to ${recipientAddress.substring(0, 6)}...${recipientAddress.substring(recipientAddress.length - 4)}`);
                             // Reset fields
@@ -165,7 +202,6 @@ export default function Send() {
             ]
         );
     };
-
     return (
         <SafeAreaView style={styles.container}>
             {isLoading && (
