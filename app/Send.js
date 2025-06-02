@@ -21,6 +21,7 @@ import axios from 'axios';
 import { wallet_provider_api, WALLET_PROVIDER_TOKEN } from '../lib/constants';
 import { supabase } from '../lib/supabaseClient';
 import LoadingModal from './components/LoadingModal';
+import LoggedHeader from './components/LoggedHeader';
 
 const { width, height } = Dimensions.get('window');
 
@@ -171,7 +172,6 @@ export default function Send() {
                 <LoadingModal />
             )}
             {/* Header with Back Button */}
-            <Header showBackButton={true} onBackPress={handleBack} />
 
             {/* Main Content */}
             <ScrollView
@@ -194,7 +194,7 @@ export default function Send() {
                             placeholderTextColor="#555"
                             value={recipientAddress}
                             onChangeText={setRecipientAddress}
-                            selectionColor="#FFFFE3"
+                            selectionColor="#EAE5DC"
                             autoCapitalize="none"
                             autoCorrect={false}
                         />
@@ -213,7 +213,7 @@ export default function Send() {
                             keyboardType="decimal-pad"
                             value={amount}
                             onChangeText={handleChangeAmount}
-                            selectionColor="#FFFFE3"
+                            selectionColor="#EAE5DC"
                         />
                         <TouchableOpacity
                             style={styles.maxButton}
@@ -265,12 +265,13 @@ export default function Send() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#11110E',
+        backgroundColor: '#000000',
         paddingTop: Platform.OS === 'android' ? verticalScale(20) : 0,
     },
     scrollContent: {
         paddingHorizontal: moderateScale(20),
         paddingBottom: verticalScale(100),
+        marginTop: verticalScale(30),
     },
     balanceCard: {
         backgroundColor: '#000',
@@ -285,7 +286,7 @@ const styles = StyleSheet.create({
         marginBottom: verticalScale(8),
     },
     balanceAmount: {
-        color: '#FFFFE3',
+        color: '#EAE5DC',
         fontSize: moderateScale(36),
         fontWeight: '100',
         fontFamily: 'JetBrainsMono_400Regular'
@@ -306,7 +307,7 @@ const styles = StyleSheet.create({
         borderColor: '#333',
     },
     addressInput: {
-        color: '#FFFFE3',
+        color: '#EAE5DC',
         fontSize: moderateScale(16),
         fontFamily: 'JetBrainsMono_400Regular',
         padding: 0,
@@ -321,13 +322,13 @@ const styles = StyleSheet.create({
         borderColor: '#333',
     },
     currencySymbol: {
-        color: '#FFFFE3',
+        color: '#EAE5DC',
         fontSize: moderateScale(24),
         marginRight: moderateScale(10),
     },
     amountInput: {
         flex: 1,
-        color: '#FFFFE3',
+        color: '#EAE5DC',
         fontSize: moderateScale(24),
         fontFamily: 'JetBrainsMono_400Regular',
         padding: 0,
@@ -340,7 +341,7 @@ const styles = StyleSheet.create({
         marginLeft: moderateScale(10),
     },
     maxButtonText: {
-        color: '#FFFFE3',
+        color: '#EAE5DC',
         fontSize: moderateScale(14),
         fontWeight: 'bold',
     },
@@ -360,13 +361,13 @@ const styles = StyleSheet.create({
         fontSize: moderateScale(14),
     },
     summaryValue: {
-        color: '#FFFFE3',
+        color: '#EAE5DC',
         fontSize: moderateScale(14),
         fontFamily: 'JetBrainsMono_400Regular',
         maxWidth: '60%',
     },
     sendButton: {
-        backgroundColor: '#FFFFE3',
+        backgroundColor: '#EAE5DC',
         padding: moderateScale(16),
         alignItems: 'center',
         marginBottom: verticalScale(20),

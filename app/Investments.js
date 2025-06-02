@@ -10,6 +10,7 @@ import axios from 'axios';
 import { wallet_provider_api, WALLET_PROVIDER_TOKEN } from '../lib/constants';
 import LoadingModal from './components/LoadingModal';
 import { supabase } from '../lib/supabaseClient';
+import LoggedHeader from './components/LoggedHeader';
 
 export default function Investments() {
     const navigation = useNavigation();
@@ -55,6 +56,7 @@ export default function Investments() {
                 wallet_provider_api + 'vesu/pool/apy',
                 {
                     poolName: "Re7 USDC",
+                    assetSymbol: "USDC"
                 },
                 {
                     headers: {
@@ -188,7 +190,7 @@ export default function Investments() {
                 <LoadingModal />
             )}
 
-            <Header />
+            <LoggedHeader />
 
             {/* ScrollView con RefreshControl */}
             <ScrollView
@@ -197,8 +199,8 @@ export default function Investments() {
                     <RefreshControl
                         refreshing={isRefreshing}
                         onRefresh={handleRefresh} // Llama a la función de refresco
-                        tintColor="#FFFFE3" // Color del indicador en iOS
-                        colors={['#FFFFE3']} // Colores del indicador en Android
+                        tintColor="#EAE5DC" // Color del indicador en iOS
+                        colors={['#EAE5DC']} // Colores del indicador en Android
                     />
                 }
             >
@@ -210,7 +212,7 @@ export default function Investments() {
                     <View style={styles.summaryRow}>
                         <View style={styles.summaryItem}>
                             <View style={styles.iconContainer}>
-                                <Icon name="trending-up-outline" color="#FFFFE3" size={20} />
+                                <Icon name="trending-up-outline" color="#EAE5DC" size={20} />
                             </View>
                             <Text style={styles.summaryLabel}>Total Invested</Text>
                             <Text style={styles.summaryValue}>${totalInvested.toFixed(2)} USDC</Text>
@@ -218,7 +220,7 @@ export default function Investments() {
 
                         <View style={styles.summaryItem}>
                             <View style={styles.iconContainer}>
-                                <Icon name="stats-chart-outline" color="#FFFFE3" size={20} />
+                                <Icon name="stats-chart-outline" color="#EAE5DC" size={20} />
                             </View>
                             <Text style={styles.summaryLabel}>Current APY</Text>
                             <Text style={styles.summaryValue}>{apy.toFixed(2)}%</Text>
@@ -250,7 +252,7 @@ export default function Investments() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#11110E',
+        backgroundColor: '#000000',
         padding: 20,
     },
     emptySpace: {
@@ -302,12 +304,12 @@ const styles = StyleSheet.create({
         marginBottom: 4,
     },
     summaryValue: {
-        color: '#FFFFE3',
+        color: '#EAE5DC',
         fontSize: 16,
         fontFamily: 'JetBrainsMono_400Regular',
     },
     claimButton: {
-        backgroundColor: '#FFFFE3',
+        backgroundColor: '#EAE5DC',
         paddingVertical: 16,
         alignItems: 'center',
         justifyContent: 'center',
@@ -318,20 +320,18 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '500',
     },
-    actionButtons: {
-        marginVertical: 20,
-    },
     newInvestButton: {
         paddingVertical: 16,
         borderWidth: 1,
-        borderColor: '#FFFFE3',
+        borderColor: '#EAE5DC',
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 15,
         marginHorizontal: 25,
+        borderRadius: 6,
     },
     newInvestButtonText: {
-        color: '#FFFFE3',
+        color: '#EAE5DC',
         fontSize: 16,
         fontWeight: '500',
     },

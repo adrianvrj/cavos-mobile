@@ -53,13 +53,13 @@ export default function Invitation() {
                     <TextInput
                         style={styles.input}
                         placeholder="Enter Code"
-                        placeholderTextColor="#555"
+                        placeholderTextColor="#888"
                         maxLength={6}
                         value={invitationCode}
                         onChangeText={setInvitationCode}
                         autoCapitalize="characters"
                         keyboardType="default"
-                        selectionColor="#FFFFE3"
+                        selectionColor="#EAE5DC"
                     />
 
                     <TouchableOpacity
@@ -80,7 +80,7 @@ export default function Invitation() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#11110E',
+        backgroundColor: '#000000',
         paddingTop: Platform.OS === 'android' ? 20 : 0,
     },
     content: {
@@ -90,13 +90,13 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
     },
     title: {
-        color: '#FFFFE3',
+        color: '#EAE5DC',
         fontSize: 24,
         fontWeight: 'bold',
         marginBottom: 10,
     },
     subtitle: {
-        color: '#AAAAAA',
+        color: '#888',
         fontSize: 14,
         textAlign: 'center',
         marginBottom: 30,
@@ -105,27 +105,26 @@ const styles = StyleSheet.create({
         width: '100%',
         height: 50,
         borderWidth: 1,
-        borderColor: '#FFFFE3',
+        borderColor: '#EAE5DC',
         borderRadius: 8,
-        color: '#FFFFE3',
+        color: '#EAE5DC',
         fontSize: 18,
         paddingHorizontal: 10,
         marginBottom: 20,
         textAlign: 'center',
-        fontFamily: 'JetBrainsMono_400Regular',
     },
     submitButton: {
         width: '100%',
-        backgroundColor: '#FFFFE3',
+        backgroundColor: '#EAE5DC',
         paddingVertical: 15,
         borderRadius: 8,
         alignItems: 'center',
     },
     disabledButton: {
-        backgroundColor: '#555',
+        backgroundColor: '#333',
     },
     submitButtonText: {
-        color: '#11110E',
+        color: '#000000',
         fontSize: 16,
         fontWeight: 'bold',
     },

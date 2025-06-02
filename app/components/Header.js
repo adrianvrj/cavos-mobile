@@ -29,7 +29,7 @@ export default function Header() {
                 />
             </View>
             <TouchableOpacity style={styles.logoutButton} onPress={goToLogin}>
-                <Icon name="log-out-outline" size={24} color="#FFFFE3" />
+                <Icon name="log-out-outline" size={24} color="#EAE5DC" />
             </TouchableOpacity>
         </View>
     );
