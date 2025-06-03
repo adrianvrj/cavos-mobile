@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     poolCard: {
-        backgroundColor: '#11110E',
+        backgroundColor: '#000000',
         borderRadius: moderateScale(16),
         padding: moderateScale(24),
         marginBottom: verticalScale(30),
@@ -292,7 +292,6 @@ const styles = StyleSheet.create({
     },
     statCard: {
         flex: 1,
-        backgroundColor: '#11110E',
         borderRadius: moderateScale(12),
         padding: moderateScale(20),
         alignItems: 'center',
@@ -400,7 +399,6 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     comingSoonCard: {
-        backgroundColor: '#11110E',
         borderRadius: moderateScale(12),
         padding: moderateScale(20),
         borderWidth: 1,

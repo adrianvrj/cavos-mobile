@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
         flex: 1,
         color: '#EAE5DC',
         fontSize: moderateScale(16),
-        paddingVertical: 0, // Remove default padding
+        paddingVertical: 0,
     },
     clearButton: {
         marginLeft: moderateScale(8),
@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
         marginBottom: verticalScale(1),
     },
     resultItem: {
-        backgroundColor: '#181816',
+        backgroundColor: '#000000',
         borderRadius: moderateScale(12),
         paddingVertical: verticalScale(16),
         paddingHorizontal: moderateScale(16),
