@@ -435,7 +435,7 @@ const styles = StyleSheet.create({
         letterSpacing: 1,
     },
     mainCard: {
-        backgroundColor: '#1A1A17',
+        backgroundColor: '#000000',
         borderRadius: moderateScale(20),
         padding: moderateScale(28),
         marginBottom: verticalScale(32),
@@ -535,8 +535,7 @@ const styles = StyleSheet.create({
     primaryButtonText: {
         color: '#11110E',
         fontSize: moderateScale(18),
-        fontWeight: '700',
-        letterSpacing: 0.5,
+        fontWeight: '400',
     },
     buttonGlow: {
         position: 'absolute',
@@ -560,13 +559,14 @@ const styles = StyleSheet.create({
         gap: moderateScale(8),
         paddingVertical: verticalScale(16),
         borderWidth: 1,
-        borderColor: '#444',
-        borderRadius: moderateScale(12),
-        backgroundColor: '#1A1A17',
+        borderColor: '#EAE5DC',
+        borderRadius: moderateScale(8),
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     secondaryButtonText: {
         color: '#EAE5DC',
-        fontSize: moderateScale(15),
+        fontSize: moderateScale(16),
         fontWeight: '500',
     },
     infoSection: {
@@ -574,7 +574,7 @@ const styles = StyleSheet.create({
         marginHorizontal: moderateScale(4),
     },
     infoCard: {
-        backgroundColor: '#181816',
+        backgroundColor: '#000000',
         borderRadius: moderateScale(16),
         padding: moderateScale(20),
         borderWidth: 1,

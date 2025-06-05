@@ -19,6 +19,7 @@ import { useNavigation } from '@react-navigation/native';
 import { supabase } from '../../lib/supabaseClient';
 import LoggedHeader from '../components/LoggedHeader';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { useWallet } from '../../atoms/wallet';
 
 const { width, height } = Dimensions.get('window');
 const scale = size => width / 375 * size;
@@ -30,8 +31,9 @@ export default function Search() {
     const [results, setResults] = useState([]);
     const [loading, setLoading] = useState(false);
     const [hasSearched, setHasSearched] = useState(false);
+    const wallet = useWallet((state) => state.wallet);
     const navigation = useNavigation();
-    
+
     // Animaciones
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const slideAnim = useRef(new Animated.Value(30)).current;
@@ -66,7 +68,8 @@ export default function Search() {
                         .limit(100);
 
                     if (!error) {
-                        setResults(data || []);
+                        const resultsWithWallet = data.filter(user => user.address !== wallet?.address);
+                        setResults(resultsWithWallet || []);
                         setHasSearched(true);
                     }
                 } catch (e) {
@@ -177,9 +180,9 @@ export default function Search() {
 
     const renderEmptyState = () => {
         if (loading) return null;
-        
+
         return (
-            <Animated.View 
+            <Animated.View
                 style={[
                     styles.emptyStateContainer,
                     { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }
@@ -190,8 +193,8 @@ export default function Search() {
                     {hasSearched ? 'No users found' : 'Search for users'}
                 </Text>
                 <Text style={styles.emptyStateSubtitle}>
-                    {hasSearched 
-                        ? 'Try adjusting your search terms' 
+                    {hasSearched
+                        ? 'Try adjusting your search terms'
                         : 'Start typing to find users by username'
                     }
                 </Text>
@@ -204,7 +207,7 @@ export default function Search() {
             <LoggedHeader />
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                 <View style={styles.inner}>
-                    <Animated.View 
+                    <Animated.View
                         style={[
                             styles.searchContainer,
                             { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }
@@ -223,7 +226,7 @@ export default function Search() {
                                 clearButtonMode="while-editing"
                             />
                             {query.length > 0 && (
-                                <TouchableOpacity 
+                                <TouchableOpacity
                                     onPress={clearSearch}
                                     style={styles.clearButton}
                                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
@@ -232,7 +235,7 @@ export default function Search() {
                                 </TouchableOpacity>
                             )}
                         </View>
-                        
+
                         {query.length > 0 && (
                             <View style={styles.searchInfo}>
                                 <Text style={styles.searchInfoText}>
@@ -249,9 +252,9 @@ export default function Search() {
                                 <Text style={styles.loadingText}>Searching users...</Text>
                             </View>
                         )}
-                        
+
                         {!loading && results.length === 0 && renderEmptyState()}
-                        
+
                         {!loading && results.length > 0 && (
                             <FlatList
                                 data={results}
@@ -302,7 +305,7 @@ const styles = StyleSheet.create({
         flex: 1,
         color: '#EAE5DC',
         fontSize: moderateScale(16),
-        paddingVertical: 0, // Remove default padding
+        paddingVertical: 0,
     },
     clearButton: {
         marginLeft: moderateScale(8),
@@ -327,7 +330,7 @@ const styles = StyleSheet.create({
         marginBottom: verticalScale(1),
     },
     resultItem: {
-        backgroundColor: '#181816',
+        backgroundColor: '#000000',
         borderRadius: moderateScale(12),
         paddingVertical: verticalScale(16),
         paddingHorizontal: moderateScale(16),
