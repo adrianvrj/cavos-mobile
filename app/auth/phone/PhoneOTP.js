@@ -106,14 +106,14 @@ export default function PhoneOTP() {
                 Alert.alert("Something went wrong, please try again.")
             }
             if (isReset) {
-                navigation.navigate('Pin', { isReset: true });
+                navigation.replace('Pin', { isReset: true });
             }
             else {
                 if (!await hasWallet(data.user.id)) {
-                    navigation.navigate('Invitation', { isReset: false });
+                    navigation.replace('Invitation', { isReset: false });
                 }
                 else {
-                    navigation.navigate('Pin');
+                    navigation.replace('Pin');
                 }
             }
         }

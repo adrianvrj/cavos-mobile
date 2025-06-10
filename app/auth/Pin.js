@@ -21,6 +21,7 @@ import { useWallet } from '../../atoms/wallet';
 import { useUserStore } from '../../atoms/userId';
 import Header from '../components/Header';
 import LoadingModal from '../components/LoadingModal';
+import * as LocalAuthentication from 'expo-local-authentication';
 
 const { width, height } = Dimensions.get('window');
 
@@ -40,6 +41,9 @@ export default function Pin() {
     const [isNewUser, setIsNewUser] = useState(false);
     const [userData, setUserData] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [hasBiometricHardware, setHasBiometricHardware] = useState(false);
+    const [biometricEnrolled, setBiometricEnrolled] = useState(false);
+    const [biometricEnabled, setBiometricEnabled] = useState(false);
 
     const [fontsLoaded] = Font.useFonts({
         'Satoshi-Variable': require('../../assets/fonts/Satoshi-Variable.ttf'),
@@ -85,6 +89,77 @@ export default function Pin() {
             Alert.alert('Reset Pin', 'Please enter a new PIN');
         }
     }, [userId]);
+
+    useEffect(() => {
+        async function checkBiometrics() {
+            const compatible = await LocalAuthentication.hasHardwareAsync();
+            const enrolled = await LocalAuthentication.isEnrolledAsync();
+            setHasBiometricHardware(compatible);
+            setBiometricEnrolled(enrolled);
+        }
+
+        if (userId) {
+            checkBiometrics();
+        }
+
+        if (isReset) {
+            Alert.alert('Reset Pin', 'Please enter a new PIN');
+        }
+    }, [userId]);
+
+    useEffect(() => {
+        async function maybeAuthenticateWithBiometrics() {
+            if (!userData || !biometricEnrolled || !hasBiometricHardware) return;
+
+            if (userData.face_id_enabled) {
+                const result = await LocalAuthentication.authenticateAsync({
+                    promptMessage: 'Authenticate with Face ID',
+                    fallbackLabel: 'Enter PIN instead',
+                });
+
+                if (result.success) {
+                    setWallet(userData);
+                    navigation.reset({
+                        index: 0,
+                        routes: [{ name: 'BottomMenu' }],
+                    });
+                }
+            } else {
+                Alert.alert(
+                    'Enable Face ID',
+                    'Would you like to enable Face ID for future logins?',
+                    [
+                        { text: 'No', style: 'cancel' },
+                        {
+                            text: 'Yes',
+                            onPress: async () => {
+                                const authResult = await LocalAuthentication.authenticateAsync({
+                                    promptMessage: 'Authenticate to enable Face ID',
+                                });
+                                if (authResult.success) {
+                                    await supabase
+                                        .from('user_wallet')
+                                        .update({ face_id_enabled: true })
+                                        .eq('uid', userId);
+
+                                    setUserData((prev) => ({ ...prev, face_id_enabled: true }));
+                                    setWallet(userData);
+                                    navigation.reset({
+                                        index: 0,
+                                        routes: [{ name: 'BottomMenu' }],
+                                    });
+                                }
+                            },
+                        },
+                    ]
+                );
+            }
+        }
+
+        maybeAuthenticateWithBiometrics();
+    }, [userData, biometricEnrolled]);
+
+
 
     const handleNumberPress = (number) => {
         if (pin.length < 6) {
@@ -252,7 +327,7 @@ export default function Pin() {
         } catch (err) {
             console.error('Unexpected error in validatePin:', err);
         }
-        finally {  
+        finally {
             setIsLoading(false);
         }
     };
@@ -261,7 +336,7 @@ export default function Pin() {
         <SafeAreaView style={styles.container}>
             {/* Loading Indicator */}
             {isLoading && (
-                <LoadingModal/>
+                <LoadingModal />
             )}
             {/* Header with Back Button */}
             <Header showBackButton={true} />
