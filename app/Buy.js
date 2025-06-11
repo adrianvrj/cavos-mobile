@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
     StyleSheet,
     Text,
@@ -8,7 +8,8 @@ import {
     ScrollView,
     Dimensions,
     Platform,
-    Alert
+    Alert,
+    Animated
 } from 'react-native';
 import * as Font from 'expo-font';
 import { useFonts, JetBrainsMono_400Regular } from '@expo-google-fonts/jetbrains-mono';
@@ -26,6 +27,8 @@ const moderateScale = (size, factor = 0.5) => size + (scale(size) - size) * fact
 
 export default function Buy() {
     const wallet = useWallet((state) => state.wallet);
+    const [copiedAnimation] = useState(new Animated.Value(0));
+    const [selectedMethod, setSelectedMethod] = useState('crypto'); // 'crypto' or 'bank'
 
     const [fontsLoaded] = Font.useFonts({
         'Satoshi-Variable': require('../assets/fonts/Satoshi-Variable.ttf'),
@@ -50,11 +53,30 @@ export default function Buy() {
 
     const handleCopyAddress = () => {
         Clipboard.setStringAsync(walletAddress);
-        Alert.alert('Copied!', 'Wallet address copied to clipboard.');
+        
+        // Animación de feedback visual
+        Animated.sequence([
+            Animated.timing(copiedAnimation, {
+                toValue: 1,
+                duration: 150,
+                useNativeDriver: true,
+            }),
+            Animated.timing(copiedAnimation, {
+                toValue: 0,
+                duration: 1500,
+                useNativeDriver: true,
+            }),
+        ]).start();
+
+        Alert.alert('✓ Copied!', 'Wallet address copied to clipboard.');
     };
 
     const handleBankTransfer = () => {
-        Alert.alert('Coming soon', 'Bank transfer is a feature in development.');
+        Alert.alert('🏦 Coming Soon', 'Bank transfer functionality is currently in development. We\'ll notify you when it\'s available!');
+    };
+
+    const formatAddress = (address) => {
+        return `${address.slice(0, 6)}...${address.slice(-4)}`;
     };
 
     return (
@@ -63,83 +85,205 @@ export default function Buy() {
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
             >
-                {/* Action Buttons */}
-                <View style={styles.actionButtons}>
-                    <TouchableOpacity style={styles.bankButton} onPress={handleBankTransfer}>
-                        <Text style={styles.bankButtonText}>Bank Transfer</Text>
+                {/* Header Section */}
+                <View style={styles.headerSection}>
+                    <Text style={styles.mainTitle}>Add Funds</Text>
+                    <Text style={styles.subtitle}>Choose your preferred deposit method</Text>
+                </View>
+
+                {/* Method Selection */}
+                <View style={styles.methodSelector}>
+                    <TouchableOpacity 
+                        style={[
+                            styles.methodOption,
+                            selectedMethod === 'crypto' && styles.methodOptionSelected
+                        ]}
+                        onPress={() => setSelectedMethod('crypto')}
+                    >
+                        <MaterialIcons 
+                            name="currency-bitcoin" 
+                            size={moderateScale(24)} 
+                            color={selectedMethod === 'crypto' ? '#EAE5DC' : '#666'} 
+                        />
+                        <Text style={[
+                            styles.methodText,
+                            selectedMethod === 'crypto' && styles.methodTextSelected
+                        ]}>
+                            Crypto Deposit
+                        </Text>
+                        <Text style={[
+                            styles.methodSubtext,
+                            selectedMethod === 'crypto' && styles.methodSubtextSelected
+                        ]}>
+                            Instant • No fees
+                        </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity 
+                        style={[
+                            styles.methodOption,
+                            selectedMethod === 'bank' && styles.methodOptionSelected
+                        ]}
+                        onPress={() => setSelectedMethod('bank')}
+                    >
+                        <MaterialIcons 
+                            name="account-balance" 
+                            size={moderateScale(24)} 
+                            color={selectedMethod === 'bank' ? '#EAE5DC' : '#666'} 
+                        />
+                        <Text style={[
+                            styles.methodText,
+                            selectedMethod === 'bank' && styles.methodTextSelected
+                        ]}>
+                            Bank Transfer
+                        </Text>
+                        <Text style={[
+                            styles.methodSubtext,
+                            selectedMethod === 'bank' && styles.methodSubtextSelected
+                        ]}>
+                            Coming soon
+                        </Text>
                     </TouchableOpacity>
                 </View>
 
-                {/* Texto "Or" entre Bank Transfer y Deposit Address */}
-                <View style={styles.orContainer}>
-                    <Text style={styles.orText}>Or</Text>
-                </View>
+                {/* Content based on selected method */}
+                {selectedMethod === 'crypto' ? (
+                    <>
+                        {/* Wallet Address Card */}
+                        <View style={styles.cardContainer}>
+                            <View style={styles.card}>
+                                <View style={styles.cardHeader}>
+                                    <MaterialIcons name="account-balance-wallet" size={moderateScale(20)} color="#666" />
+                                    <Text style={styles.cardTitle}>YOUR DEPOSIT ADDRESS</Text>
+                                </View>
+                                
+                                <View style={styles.addressContainer}>
+                                    <View style={styles.addressSection}>
+                                        <Text style={styles.addressLabel}>Full Address</Text>
+                                        <Text style={styles.addressText} numberOfLines={2} ellipsizeMode="middle">
+                                            {walletAddress}
+                                        </Text>
+                                    </View>
+                                    
+                                    <TouchableOpacity 
+                                        style={[styles.copyButton, copiedAnimation._value > 0 && styles.copyButtonActive]} 
+                                        onPress={handleCopyAddress}
+                                    >
+                                        <Animated.View style={{
+                                            opacity: copiedAnimation.interpolate({
+                                                inputRange: [0, 1],
+                                                outputRange: [1, 0]
+                                            })
+                                        }}>
+                                            <MaterialIcons name="content-copy" size={moderateScale(20)} color="#EAE5DC" />
+                                        </Animated.View>
+                                        <Animated.View style={[
+                                            styles.checkIcon,
+                                            {
+                                                opacity: copiedAnimation,
+                                                transform: [{
+                                                    scale: copiedAnimation.interpolate({
+                                                        inputRange: [0, 1],
+                                                        outputRange: [0.5, 1]
+                                                    })
+                                                }]
+                                            }
+                                        ]}>
+                                            <MaterialIcons name="check" size={moderateScale(20)} color="#666" />
+                                        </Animated.View>
+                                    </TouchableOpacity>
+                                </View>
 
-                {/* Wallet Address Card */}
-                <View style={styles.cardContainer}>
-                    <View style={styles.card}>
-                        <Text style={styles.cardTitle}>YOUR DEPOSIT ADDRESS</Text>
-                        <View style={styles.addressContainer}>
-                            <Text style={styles.addressText} numberOfLines={1} ellipsizeMode="middle">
-                                {walletAddress}
-                            </Text>
-                            <TouchableOpacity style={styles.copyButton} onPress={handleCopyAddress}>
-                                <MaterialIcons name="content-copy" size={moderateScale(20)} color="#EAE5DC" />
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </View>
-
-                {/* Texto para invitar a scrollear */}
-                <View style={styles.scrollHintContainer}>
-                    <Text style={styles.scrollHintText}>
-                        Only send USDC or USDT from supported networks.
-                    </Text>
-                </View>
-
-                {/* Important Notes */}
-                <View style={styles.notesContainer}>
-                    <Text style={styles.sectionTitle}>IMPORTANT</Text>
-
-                    <View style={styles.noteItem}>
-                        <View style={styles.noteIcon}>
-                            <MaterialIcons name="warning" size={moderateScale(20)} color="#F44336" />
-                        </View>
-                        <Text style={styles.noteText}>
-                            Only send from supported networks: {supportedNetworks.join(', ')}
-                        </Text>
-                    </View>
-
-                    <View style={styles.noteItem}>
-                        <View style={styles.noteIcon}>
-                            <MaterialIcons name="warning" size={moderateScale(20)} color="#F44336" />
-                        </View>
-                        <Text style={styles.noteText}>
-                            Supported assets: USDC, USDT.
-                        </Text>
-                    </View>
-
-                    <View style={styles.noteItem}>
-                        <View style={styles.noteIcon}>
-                            <MaterialIcons name="warning" size={moderateScale(20)} color="#F44336" />
-                        </View>
-                        <Text style={styles.noteText}>
-                            Do not send from exchanges that don't allow withdrawals to smart contracts.
-                        </Text>
-                    </View>
-                </View>
-
-                {/* Network Info */}
-                <View style={styles.networkInfo}>
-                    <Text style={styles.sectionTitle}>SUPPORTED NETWORKS</Text>
-                    <View style={styles.networkContainer}>
-                        {supportedNetworks.map((network, index) => (
-                            <View key={index} style={styles.networkBadge}>
-                                <Text style={styles.networkText}>{network}</Text>
+                                <View style={styles.addressSummary}>
+                                    <Text style={styles.summaryLabel}>Quick Reference</Text>
+                                    <Text style={styles.summaryAddress}>{formatAddress(walletAddress)}</Text>
+                                </View>
                             </View>
-                        ))}
+                        </View>
+
+                        {/* Quick Info */}
+                        <View style={styles.quickInfoContainer}>
+                            <View style={styles.quickInfoItem}>
+                                <MaterialIcons name="flash-on" size={moderateScale(18)} color="#666" />
+                                <Text style={styles.quickInfoText}>Instant deposits</Text>
+                            </View>
+                            <View style={styles.quickInfoItem}>
+                                <MaterialIcons name="security" size={moderateScale(18)} color="#666" />
+                                <Text style={styles.quickInfoText}>Secure & encrypted</Text>
+                            </View>
+                        </View>
+
+                        {/* Supported Assets */}
+                        <View style={styles.assetsContainer}>
+                            <Text style={styles.sectionTitle}>SUPPORTED ASSETS</Text>
+                            <View style={styles.assetsList}>
+                                <View style={styles.assetItem}>
+                                    <View style={styles.assetIcon}>
+                                        <Text style={styles.assetIconText}>₵</Text>
+                                    </View>
+                                    <View style={styles.assetInfo}>
+                                        <Text style={styles.assetName}>USDC</Text>
+                                        <Text style={styles.assetNetwork}>Starknet</Text>
+                                    </View>
+                                </View>
+                            </View>
+                        </View>
+
+                        {/* Important Notes */}
+                        <View style={styles.notesContainer}>
+                            <Text style={styles.sectionTitle}>IMPORTANT NOTES</Text>
+
+                            <View style={styles.noteItem}>
+                                <View style={styles.noteIconContainer}>
+                                    <MaterialIcons name="info" size={moderateScale(18)} color="#FFFFFF" />
+                                </View>
+                                <View style={styles.noteContent}>
+                                    <Text style={styles.noteTitle}>Network Compatibility</Text>
+                                    <Text style={styles.noteText}>
+                                        Only send from supported networks: {supportedNetworks.join(', ')}
+                                    </Text>
+                                </View>
+                            </View>
+
+                            <View style={styles.noteItem}>
+                                <View style={styles.noteIconContainer}>
+                                    <MaterialIcons name="warning" size={moderateScale(18)} color="#FFFFFF" />
+                                </View>
+                                <View style={styles.noteContent}>
+                                    <Text style={styles.noteTitle}>Exchange Restrictions</Text>
+                                    <Text style={styles.noteText}>
+                                        Do not send from exchanges that don't allow withdrawals to smart contracts.
+                                    </Text>
+                                </View>
+                            </View>
+
+                            <View style={styles.noteItem}>
+                                <View style={styles.noteIconContainer}>
+                                    <MaterialIcons name="access-time" size={moderateScale(18)} color="#FFFFFF" />
+                                </View>
+                                <View style={styles.noteContent}>
+                                    <Text style={styles.noteTitle}>Processing Time</Text>
+                                    <Text style={styles.noteText}>
+                                        Deposits typically arrive within 2-5 minutes after network confirmation.
+                                    </Text>
+                                </View>
+                            </View>
+                        </View>
+                    </>
+                ) : (
+                    // Bank Transfer Content
+                    <View style={styles.comingSoonContainer}>
+                        <MaterialIcons name="account-balance" size={moderateScale(60)} color="#666" />
+                        <Text style={styles.comingSoonTitle}>Bank Transfer</Text>
+                        <Text style={styles.comingSoonText}>
+                            We're working on adding bank transfer support. You'll be able to deposit funds directly from your bank account with low fees.
+                        </Text>
+                        <TouchableOpacity style={styles.notifyButton} onPress={handleBankTransfer}>
+                            <MaterialIcons name="notifications" size={moderateScale(20)} color="#EAE5DC" />
+                            <Text style={styles.notifyButtonText}>Notify me when ready</Text>
+                        </TouchableOpacity>
                     </View>
-                </View>
+                )}
             </ScrollView>
         </SafeAreaView>
     );
@@ -149,174 +293,277 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#000000',
-        paddingHorizontal: moderateScale(20),
+        paddingHorizontal: moderateScale(24),
         paddingTop: Platform.OS === 'android' ? verticalScale(20) : 0,
     },
     scrollContent: {
         paddingBottom: verticalScale(120),
         paddingTop: verticalScale(10),
         marginTop: verticalScale(60),
+        marginHorizontal: moderateScale(15),
+    },
+    headerSection: {
+        marginBottom: verticalScale(32),
+        alignItems: 'center',
+    },
+    mainTitle: {
+        color: '#EAE5DC',
+        fontSize: moderateScale(28),
+        fontWeight: '600',
+        marginBottom: verticalScale(8),
+    },
+    subtitle: {
+        color: '#666',
+        fontSize: moderateScale(16),
+        textAlign: 'center',
+    },
+    methodSelector: {
+        flexDirection: 'row',
+        marginBottom: verticalScale(32),
+        gap: moderateScale(12),
+    },
+    methodOption: {
+        flex: 1,
+        borderRadius: moderateScale(12),
+        padding: moderateScale(20),
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#222',
+    },
+    methodOptionSelected: {
+        borderColor: '#EAE5DC',
+    },
+    methodText: {
+        color: '#666',
+        fontSize: moderateScale(16),
+        fontWeight: '600',
+        marginTop: verticalScale(8),
+        textAlign: 'center',
+    },
+    methodTextSelected: {
+        color: '#EAE5DC',
+    },
+    methodSubtext: {
+        color: '#444',
+        fontSize: moderateScale(12),
+        marginTop: verticalScale(4),
+        textAlign: 'center',
+    },
+    methodSubtextSelected: {
+        color: '#888',
     },
     cardContainer: {
         alignItems: 'center',
-        marginBottom: verticalScale(40),
-        marginTop: verticalScale(20),
+        marginBottom: verticalScale(24),
     },
     card: {
         backgroundColor: '#11110E',
-        borderRadius: moderateScale(10),
-        padding: moderateScale(20),
+        borderRadius: moderateScale(12),
+        padding: moderateScale(24),
         width: '100%',
         maxWidth: 420,
         borderWidth: 1,
         borderColor: '#222',
     },
+    cardHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: verticalScale(16),
+    },
     cardTitle: {
         color: '#666',
         fontSize: moderateScale(12),
-        marginBottom: verticalScale(8),
+        marginLeft: moderateScale(8),
         letterSpacing: 1,
+        fontWeight: '600',
     },
     addressContainer: {
-        flexDirection: 'row',
         backgroundColor: '#000',
         borderRadius: moderateScale(8),
-        padding: moderateScale(15),
-        marginBottom: verticalScale(10),
-        alignItems: 'center',
+        padding: moderateScale(16),
+        marginBottom: verticalScale(16),
         borderWidth: 1,
         borderColor: '#333',
     },
+    addressSection: {
+        marginBottom: verticalScale(12),
+    },
+    addressLabel: {
+        color: '#666',
+        fontSize: moderateScale(11),
+        marginBottom: verticalScale(4),
+        letterSpacing: 0.5,
+    },
     addressText: {
-        flex: 1,
         color: '#EAE5DC',
-        fontSize: moderateScale(14),
+        fontSize: moderateScale(13),
         fontFamily: 'JetBrainsMono_400Regular',
+        lineHeight: moderateScale(20),
     },
     copyButton: {
-        padding: moderateScale(5),
-        marginLeft: moderateScale(10),
+        alignSelf: 'flex-end',
+        padding: moderateScale(8),
+        borderRadius: moderateScale(6),
+        backgroundColor: '#222',
+        position: 'relative',
     },
-    balanceSection: {
-        marginBottom: verticalScale(40),
+    copyButtonActive: {
+        backgroundColor: '#333',
+    },
+    checkIcon: {
+        position: 'absolute',
+        top: moderateScale(8),
+        left: moderateScale(8),
+    },
+    addressSummary: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
         alignItems: 'center',
+        paddingTop: verticalScale(12),
+        borderTopWidth: 1,
+        borderTopColor: '#222',
     },
-    balanceLabel: {
+    summaryLabel: {
         color: '#666',
         fontSize: moderateScale(12),
-        marginBottom: verticalScale(8),
-        letterSpacing: 1,
     },
-    balanceAmount: {
+    summaryAddress: {
         color: '#EAE5DC',
-        fontSize: moderateScale(32),
-        fontWeight: '300',
-        fontFamily: 'JetBrainsMono_400Regular'
+        fontSize: moderateScale(12),
+        fontFamily: 'JetBrainsMono_400Regular',
     },
-    actionButtons: {
+    quickInfoContainer: {
         flexDirection: 'row',
         justifyContent: 'center',
-        marginBottom: verticalScale(30),
-        paddingHorizontal: width * 0.05,
-        gap: moderateScale(20),
+        gap: moderateScale(24),
+        marginBottom: verticalScale(32),
     },
-    buyButton: {
-        flex: 1,
-        paddingVertical: verticalScale(16),
-        borderWidth: 1,
-        borderColor: '#EAE5DC',
-        borderRadius: moderateScale(8),
+    quickInfoItem: {
+        flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#11110E',
+        gap: moderateScale(6),
     },
-    buyButtonText: {
-        color: '#EAE5DC',
-        fontSize: moderateScale(16),
-        fontWeight: '500',
-    },
-    bankButton: {
-        flex: 1,
-        paddingVertical: verticalScale(16),
-        borderWidth: 1,
-        borderColor: '#EAE5DC',
-        borderRadius: moderateScale(8),
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#000000',
-    },
-    bankButtonText: {
-        color: '#EAE5DC',
-        fontSize: moderateScale(16),
-        fontWeight: '500',
-    },
-    scrollHintContainer: {
-        alignItems: 'center',
-        marginBottom: verticalScale(30),
-        paddingHorizontal: moderateScale(10),
-    },
-    scrollHintText: {
-        color: '#666',
+    quickInfoText: {
+        color: '#888',
         fontSize: moderateScale(14),
-        fontStyle: 'italic',
-        textAlign: 'center',
     },
-    notesContainer: {
-        marginBottom: verticalScale(30),
-        paddingHorizontal: moderateScale(10),
+    assetsContainer: {
+        marginBottom: verticalScale(32),
     },
     sectionTitle: {
         color: '#EAE5DC',
-        marginBottom: 10,
-        fontWeight: 'bold',
+        marginBottom: verticalScale(16),
+        fontWeight: '600',
         fontSize: moderateScale(14),
         letterSpacing: 1,
+    },
+    assetsList: {
+        gap: moderateScale(12),
+    },
+    assetItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#11110E',
+        borderRadius: moderateScale(8),
+        padding: moderateScale(16),
+        borderWidth: 1,
+        borderColor: '#222',
+    },
+    assetIcon: {
+        width: moderateScale(40),
+        height: moderateScale(40),
+        borderRadius: moderateScale(20),
+        backgroundColor: '#000',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: moderateScale(12),
+    },
+    assetIconText: {
+        color: '#EAE5DC',
+        fontSize: moderateScale(18),
+        fontWeight: 'bold',
+    },
+    assetInfo: {
+        flex: 1,
+    },
+    assetName: {
+        color: '#EAE5DC',
+        fontSize: moderateScale(16),
+        fontWeight: '600',
+    },
+    assetNetwork: {
+        color: '#666',
+        fontSize: moderateScale(12),
+        marginTop: verticalScale(2),
+    },
+    notesContainer: {
+        marginBottom: verticalScale(32),
     },
     noteItem: {
         flexDirection: 'row',
-        alignItems: 'flex-start',
-        marginBottom: verticalScale(15),
+        marginBottom: verticalScale(16),
+        backgroundColor: '#11110E',
+        borderRadius: moderateScale(8),
+        padding: moderateScale(16),
+        borderWidth: 1,
+        borderColor: '#222',
     },
-    noteIcon: {
-        marginRight: moderateScale(10),
+    noteIconContainer: {
+        width: moderateScale(32),
+        height: moderateScale(32),
+        borderRadius: moderateScale(16),
+        backgroundColor: '#000',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: moderateScale(12),
         marginTop: moderateScale(2),
     },
-    noteText: {
+    noteContent: {
         flex: 1,
+    },
+    noteTitle: {
         color: '#EAE5DC',
         fontSize: moderateScale(14),
-        lineHeight: moderateScale(20),
+        fontWeight: '600',
+        marginBottom: verticalScale(4),
     },
-    networkInfo: {
-        marginBottom: verticalScale(20),
-        paddingHorizontal: moderateScale(10),
+    noteText: {
+        color: '#888',
+        fontSize: moderateScale(13),
+        lineHeight: moderateScale(18),
     },
-    networkContainer: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-    },
-    networkBadge: {
-        backgroundColor: '#000',
-        borderRadius: moderateScale(20),
-        paddingHorizontal: moderateScale(15),
-        paddingVertical: moderateScale(8),
-        marginRight: moderateScale(10),
-        marginBottom: moderateScale(10),
-        borderWidth: 1,
-        borderColor: '#333',
-    },
-    networkText: {
-        color: '#EAE5DC',
-        fontSize: moderateScale(14),
-    },
-    orContainer: {
+    comingSoonContainer: {
         alignItems: 'center',
-        marginBottom: verticalScale(10),
+        paddingVertical: verticalScale(60),
+        paddingHorizontal: moderateScale(20),
     },
-    orText: {
+    comingSoonTitle: {
+        color: '#EAE5DC',
+        fontSize: moderateScale(24),
+        fontWeight: '600',
+        marginTop: verticalScale(16),
+        marginBottom: verticalScale(12),
+    },
+    comingSoonText: {
         color: '#666',
         fontSize: moderateScale(16),
-        fontWeight: '400',
-        letterSpacing: 1,
+        textAlign: 'center',
+        lineHeight: moderateScale(22),
+        marginBottom: verticalScale(32),
+    },
+    notifyButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#11110E',
+        borderRadius: moderateScale(8),
+        padding: moderateScale(16),
+        borderWidth: 1,
+        borderColor: '#333',
+        gap: moderateScale(8),
+    },
+    notifyButtonText: {
+        color: '#EAE5DC',
+        fontSize: moderateScale(16),
+        fontWeight: '500',
     },
 });
