@@ -9,12 +9,13 @@ import {
     Alert,
     Dimensions,
     ScrollView,
+    Animated
 } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useWallet } from '../atoms/wallet';
 import { supabase } from '../lib/supabaseClient';
 import { useUserStore } from '../atoms/userId';
-import LoggedHeader from './components/LoggedHeader';
 import { useNavigation } from '@react-navigation/native';
 
 const { width, height } = Dimensions.get('window');
@@ -31,6 +32,7 @@ export default function Profile() {
     const [username, setUsername] = useState('');
     const [savedUsername, setSavedUsername] = useState('');
     const [isSaving, setIsSaving] = useState(false);
+    const [copiedAnimation] = useState(new Animated.Value(0));
 
     useEffect(() => {
         // Fetch username from supabase
@@ -78,14 +80,33 @@ export default function Profile() {
             Alert.alert('Error', 'Could not sign out.');
             return;
         }
-        setWallet(null); // Limpia el estado de la billetera
-        setUserId(null); // Limpia el estado del usuario
+        setWallet(null);
+        setUserId(null);
         navigation.navigate('Login');
     };
 
+    const walletAddress = wallet?.address.startsWith('0x')
+        ? '0x' + wallet.address.slice(2).padStart(64, '0')
+        : '0x' + wallet.address.padStart(64, '0');
+
     const copyToClipboard = (text) => {
-        // Aquí puedes agregar la funcionalidad de copiar al portapapeles
-        Alert.alert('Copied', 'Address copied to clipboard');
+        Clipboard.setStringAsync(walletAddress);
+
+        // Animación de feedback visual
+        Animated.sequence([
+            Animated.timing(copiedAnimation, {
+                toValue: 1,
+                duration: 150,
+                useNativeDriver: true,
+            }),
+            Animated.timing(copiedAnimation, {
+                toValue: 0,
+                duration: 1500,
+                useNativeDriver: true,
+            }),
+        ]).start();
+
+        Alert.alert('✓ Copied!', 'Wallet address copied to clipboard.');
     };
 
     // Eliminar usuario

@@ -13,11 +13,9 @@ import {
 } from 'react-native';
 import * as Font from 'expo-font';
 import { useFonts, JetBrainsMono_400Regular } from '@expo-google-fonts/jetbrains-mono';
-import Header from './components/Header';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useWallet } from '../atoms/wallet';
 import * as Clipboard from 'expo-clipboard';
-import LoggedHeader from './components/LoggedHeader';
 
 const { width, height } = Dimensions.get('window');
 
@@ -48,8 +46,8 @@ export default function Buy() {
     const walletAddress = wallet.address.startsWith('0x')
         ? '0x' + wallet.address.slice(2).padStart(64, '0')
         : '0x' + wallet.address.padStart(64, '0');
+        
     const supportedNetworks = ["Starknet"];
-    const minimumDeposit = "100.00 USDC";
 
     const handleCopyAddress = () => {
         Clipboard.setStringAsync(walletAddress);
