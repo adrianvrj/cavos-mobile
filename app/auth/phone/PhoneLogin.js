@@ -128,7 +128,6 @@ export default function PhoneLogin() {
               }}
               maxLength={15}
               returnKeyType="done"
-              autoFocus
               accessibilityLabel="Phone number input"
             />
           </View>

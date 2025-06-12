@@ -100,7 +100,7 @@ export default function Investments() {
             const apyResponse = await axios.post(
                 wallet_provider_api + 'vesu/pool/apy',
                 {
-                    poolName: "Re7 USDC",
+                    poolName: "Re7 Starknet Ecosystem",
                     assetSymbol: "USDC"
                 },
                 {

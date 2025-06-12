@@ -21,6 +21,7 @@ import { wallet_provider_api, WALLET_PROVIDER_TOKEN } from '../lib/constants';
 import Icon from 'react-native-vector-icons/Ionicons';
 import LoadingModal from './components/LoadingModal';
 import LoggedHeader from './components/LoggedHeader';
+import { supabase } from '../lib/supabaseClient';
 
 const { width, height } = Dimensions.get('window');
 const scale = size => width / 375 * size;
@@ -34,7 +35,7 @@ export default function BitcoinAccount() {
     const [isLoading, setIsLoading] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [showHeader, setShowHeader] = useState(true);
-    
+    const [poolId, setPoolId] = useState(0);
     const wallet = useWallet((state) => state.wallet);
     const navigation = useNavigation();
     const scrollViewRef = useRef(null);
@@ -120,6 +121,7 @@ export default function BitcoinAccount() {
             );
             setApy(apyResponse.data.poolAPY);
             setInvestedBtc(investmentResponse.data.total_supplied);
+            setPoolId(investmentResponse.data.poolid);
         } catch (err) {
             console.error('Error fetching BTC data:', err);
             Alert.alert('Error', 'Failed to fetch BTC data.');
@@ -142,7 +144,7 @@ export default function BitcoinAccount() {
 
     const animateButtonPress = (callback) => {
         const buttonScale = new Animated.Value(1);
-        
+
         Animated.sequence([
             Animated.timing(buttonScale, {
                 toValue: 0.95,
@@ -157,6 +159,60 @@ export default function BitcoinAccount() {
         ]).start();
 
         setTimeout(callback, 150);
+    };
+
+    const handleCloseInvestment = async () => {
+        if (!investedBtc || investedBtc <= 0) {
+            Alert.alert("No investments", "You have no investments to close.");
+            return;
+        }
+        animateButtonPress(async () => {
+            setIsLoading(true);
+            try {
+                const response = await axios.post(
+                    wallet_provider_api + 'vesu/positions/btc/withdraw',
+                    {
+                        address: wallet.address,
+                        hashedPk: wallet.private_key,
+                        hashedPin: wallet.pin,
+                        poolId: poolId,
+                    },
+                    {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            Authorization: `Bearer ${WALLET_PROVIDER_TOKEN}`,
+                        },
+                    }
+                );
+
+                if (response.data.result == false) {
+                    Alert.alert("An error occurred", "Please try again later");
+                } else if (response.data.amount !== null && response.data.result !== null) {
+                    const { error: txError } = await supabase
+                        .from('transaction')
+                        .insert([
+                            {
+                                uid: wallet.uid,
+                                type: "Close Investment",
+                                amount: response.data.amount,
+                                tx_hash: response.data.result,
+                            },
+                        ]);
+
+                    if (txError) {
+                        console.error('Insert error:', txError);
+                        Alert.alert('Error saving transaction to database');
+                        return;
+                    }
+                    Alert.alert("Investment Closed", `${response.data.amount} BTC has been sent to your account, investment data might take a few minutes to update`);
+                }
+            } catch (error) {
+                Alert.alert("An error occurred", "Please try again later");
+                console.error('Error closing investment', error);
+            } finally {
+                setIsLoading(false);
+            }
+        });
     };
 
     const goToBuy = () => {
@@ -180,7 +236,7 @@ export default function BitcoinAccount() {
     return (
         <SafeAreaView style={styles.container}>
             {isLoading && <LoadingModal />}
-            
+
             {showHeader && <LoggedHeader />}
 
             <ScrollView
@@ -198,7 +254,7 @@ export default function BitcoinAccount() {
                 }
             >
                 {/* Header Section */}
-                <Animated.View 
+                <Animated.View
                     style={[
                         styles.headerSection,
                         {
@@ -210,7 +266,7 @@ export default function BitcoinAccount() {
                 </Animated.View>
 
                 {/* Main Balance Card */}
-                <Animated.View 
+                <Animated.View
                     style={[
                         styles.mainCard,
                         {
@@ -252,7 +308,7 @@ export default function BitcoinAccount() {
                 </Animated.View>
 
                 {/* Action Buttons */}
-                <Animated.View 
+                <Animated.View
                     style={[
                         styles.actionSection,
                         {
@@ -262,8 +318,8 @@ export default function BitcoinAccount() {
                     ]}
                 >
                     {/* Primary Action - Invest */}
-                    <TouchableOpacity 
-                        style={styles.primaryButton} 
+                    <TouchableOpacity
+                        style={styles.primaryButton}
                         onPress={goToInvest}
                         activeOpacity={0.8}
                     >
@@ -276,8 +332,8 @@ export default function BitcoinAccount() {
 
                     {/* Secondary Actions */}
                     <View style={styles.secondaryButtons}>
-                        <TouchableOpacity 
-                            style={styles.secondaryButton} 
+                        <TouchableOpacity
+                            style={styles.secondaryButton}
                             onPress={goToBuy}
                             activeOpacity={0.7}
                         >
@@ -285,19 +341,28 @@ export default function BitcoinAccount() {
                             <Text style={styles.secondaryButtonText}>Buy</Text>
                         </TouchableOpacity>
 
-                        <TouchableOpacity 
-                            style={styles.secondaryButton} 
+                        <TouchableOpacity
+                            style={styles.secondaryButton}
                             onPress={goToSell}
                             activeOpacity={0.7}
                         >
                             <Icon name="remove-circle-outline" size={moderateScale(18)} color="#EAE5DC" />
                             <Text style={styles.secondaryButtonText}>Sell</Text>
                         </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={styles.secondaryButton}
+                            onPress={handleCloseInvestment}
+                            activeOpacity={0.7}
+                        >
+                            <Icon name="close-circle-outline" size={moderateScale(18)} color="#EAE5DC" />
+                            <Text style={styles.secondaryButtonText}>Close</Text>
+                        </TouchableOpacity>
                     </View>
                 </Animated.View>
 
                 {/* Info Cards */}
-                <Animated.View 
+                <Animated.View
                     style={[
                         styles.infoSection,
                         {
