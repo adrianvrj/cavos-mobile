@@ -22,6 +22,7 @@ import { useUserStore } from '../atoms/userId';
 import { supabase } from '../lib/supabaseClient';
 import LoggedHeader from './components/LoggedHeader'; // Usando el nuevo header
 import LoadingModal from './components/LoadingModal';
+import { TransactionInvoiceModal } from './components/TransactionInvoiceModal';
 
 const { width, height } = Dimensions.get('window');
 
@@ -39,6 +40,8 @@ export default function UpdatedDashboard() {
     const [isRefreshing, setIsRefreshing] = useState(false);
     const scrollViewRef = useRef(null);
     const [showHeader, setShowHeader] = useState(true);
+    const [showInvoice, setShowInvoice] = useState(false);
+    const [selectedTxDetails, setSelectedTxDetails] = useState(null);
 
     Font.useFonts({
         'Satoshi-Variable': require('../assets/fonts/Satoshi-Variable.ttf'),
@@ -96,7 +99,6 @@ export default function UpdatedDashboard() {
         navigation.navigate('Send');
     };
 
-    // Detecta el scroll para mostrar/ocultar el header
     const handleScroll = (event) => {
         const y = event.nativeEvent.contentOffset.y;
         if (y >= height * 0.5 && showHeader) {
@@ -105,6 +107,20 @@ export default function UpdatedDashboard() {
             setShowHeader(true);
         }
     };
+
+    async function fetchTransactionDetails(txHash) {
+        try {
+            const response = await fetch(`https://services.cavos.xyz/api/v1/external/tx?txHash=${txHash}&network=mainnet`);
+            if (!response.ok) {
+                throw new Error('Error fetching transaction details');
+            }
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('fetchTransactionDetails error:', error);
+            return null;
+        }
+    }
 
     return (
         <SafeAreaView style={styles.container}>
@@ -128,9 +144,7 @@ export default function UpdatedDashboard() {
                     />
                 }
             >
-                {/* Sección principal */}
                 <View style={[styles.section]}>
-                    {/* Visa Card Image - ahora es Touchable */}
                     <TouchableOpacity
                         style={styles.cardContainer}
                         activeOpacity={0.85}
@@ -182,13 +196,14 @@ export default function UpdatedDashboard() {
                                 <View key={index} style={styles.transactionItem}>
                                     <View style={styles.transactionLeft}>
                                         <TouchableOpacity
-                                            onPress={() => {
-                                                const url = tx.type === 'Account Creation'
-                                                    ? `https://voyager.online/contract/${wallet.address}`
-                                                    : `https://voyager.online/tx/${tx.tx_hash}`;
-                                                Linking.openURL(url).catch((err) =>
-                                                    console.error('Failed to open URL:', err)
-                                                );
+                                            onPress={async () => {
+                                                const details = await fetchTransactionDetails(tx.tx_hash);
+                                                if (details) {
+                                                    setSelectedTxDetails(details);
+                                                    setShowInvoice(true);
+                                                } else {
+                                                    Alert.alert('Error', 'Could not fetch transaction details.');
+                                                }
                                             }}
                                         >
                                             <Text style={styles.transactionType}>{tx.type}</Text>
@@ -227,6 +242,13 @@ export default function UpdatedDashboard() {
                     </View>
                 </View>
             </ScrollView>
+            {showInvoice && selectedTxDetails && (
+                <TransactionInvoiceModal
+                    visible={showInvoice}
+                    onClose={() => setShowInvoice(false)}
+                    txDetails={selectedTxDetails}
+                />
+            )}
         </SafeAreaView>
     );
 }

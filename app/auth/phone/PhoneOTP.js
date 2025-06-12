@@ -9,7 +9,8 @@ import {
     Platform,
     Alert,
     Keyboard,
-    TouchableWithoutFeedback
+    TouchableWithoutFeedback,
+    ActivityIndicator,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import * as Font from 'expo-font';
@@ -18,9 +19,9 @@ import OTPInputView from '@twotalltotems/react-native-otp-input';
 import { useUserStore } from '../../../atoms/userId';
 import { supabase } from '../../../lib/supabaseClient';
 import Header from '../../components/Header';
+import * as Haptics from 'expo-haptics';
 
 const { width, height } = Dimensions.get('window');
-
 const scale = size => width / 375 * size;
 const verticalScale = size => height / 812 * size;
 const moderateScale = (size, factor = 0.5) => size + (scale(size) - size) * factor;
@@ -32,8 +33,10 @@ export default function PhoneOTP() {
     const [otp, setOtp] = useState('');
     const [timer, setTimer] = useState(30);
     const [resendEnabled, setResendEnabled] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
     const otpInputRef = useRef(null);
-    const setUserId = useUserStore((state) => state.setUserId)
+    const setUserId = useUserStore((state) => state.setUserId);
 
     Font.useFonts({
         'Satoshi-Variable': require('../../../assets/fonts/Satoshi-Variable.ttf'),
@@ -49,7 +52,7 @@ export default function PhoneOTP() {
     useEffect(() => {
         if (isReset) {
             Alert.alert('Reset Password', 'Please enter the verification code sent to your phone.');
-            const { data, error } = supabase.auth.signInWithOtp({
+            supabase.auth.signInWithOtp({
                 phone: phoneNumber,
             });
         }
@@ -58,7 +61,7 @@ export default function PhoneOTP() {
     useEffect(() => {
         if (timer > 0 && !resendEnabled) {
             const interval = setInterval(() => {
-                setTimer(timer - 1);
+                setTimer(prev => prev - 1);
             }, 1000);
             return () => clearInterval(interval);
         } else if (timer === 0) {
@@ -74,59 +77,67 @@ export default function PhoneOTP() {
                 .eq('uid', userId)
                 .single();
             if (error) {
-                console.error('Error fetching wallet info:', error);
                 Alert.alert('Error', 'Failed to fetch wallet information.');
-            } else {
-                if (data) {
-                    return true;
-                } else {
-                    return false;
-                }
             }
+            return !!data;
         } catch (error) {
-            console.error('Error checking wallet:', error);
             Alert.alert('Error', 'An error occurred while checking wallet information.');
             return false;
         }
     };
 
     const handleVerify = async (code) => {
-        const { data, error } = await supabase.auth.verifyOtp({
-            phone: phoneNumber,
-            token: code,
-            type: 'sms',
-        });
+        if (loading) return;
+        setLoading(true);
+        setError('');
+        try {
+            const { data, error } = await supabase.auth.verifyOtp({
+                phone: phoneNumber,
+                token: code,
+                type: 'sms',
+            });
 
-        if (error) {
-            Alert.alert('OTP verification failed:', error.message);
-        } else {
-            if (data?.user) {
-                setUserId(data.user.id);
+            if (error) {
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+                setError(error.message || 'OTP verification failed');
             } else {
-                Alert.alert("Something went wrong, please try again.")
-            }
-            if (isReset) {
-                navigation.replace('Pin', { isReset: true });
-            }
-            else {
-                if (!await hasWallet(data.user.id)) {
-                    navigation.replace('Invitation', { isReset: false });
+                if (data?.user) {
+                    setUserId(data.user.id);
+                    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                } else {
+                    setError("Something went wrong, please try again.");
+                    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
                 }
-                else {
-                    navigation.replace('Pin');
+                if (!error && data?.user) {
+                    if (isReset) {
+                        navigation.replace('Pin', { isReset: true });
+                    } else {
+                        if (!await hasWallet(data.user.id)) {
+                            navigation.replace('Invitation', { isReset: false });
+                        } else {
+                            navigation.replace('Pin');
+                        }
+                    }
                 }
             }
+        } catch (err) {
+            setError('Unexpected error, please try again.');
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         }
+        setLoading(false);
     };
 
     const handleResend = async () => {
+        if (!resendEnabled) return;
         setTimer(30);
         setResendEnabled(false);
         setOtp('');
-        const { data, error } = await supabase.auth.signInWithOtp({
+        setError('');
+        await supabase.auth.signInWithOtp({
             phone: phoneNumber,
         });
         Alert.alert('Code Sent', 'A new verification code has been sent to your phone');
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     };
 
     const dismissKeyboard = () => {
@@ -138,9 +149,7 @@ export default function PhoneOTP() {
             <SafeAreaView style={styles.container}>
                 <Header />
 
-                {/* Content */}
                 <View style={styles.content}>
-                    {/* Title Section */}
                     <View style={styles.titleContainer}>
                         <Text style={styles.title}>Enter Verification Code</Text>
                         <Text style={styles.subtitle}>
@@ -148,7 +157,6 @@ export default function PhoneOTP() {
                         </Text>
                     </View>
 
-                    {/* OTP Input */}
                     <View style={styles.otpContainer}>
                         <OTPInputView
                             ref={otpInputRef}
@@ -157,20 +165,27 @@ export default function PhoneOTP() {
                             code={otp}
                             onCodeChanged={code => {
                                 setOtp(code);
-                                if (code.length === 6) {
-                                    handleVerify(code);
-                                }
+                                setError('');
+                            }}
+                            onCodeFilled={code => {
+                                handleVerify(code);
                             }}
                             autoFocusOnLoad
                             codeInputFieldStyle={styles.underlineStyleBase}
                             codeInputHighlightStyle={styles.underlineStyleHighLighted}
                         />
+                        {error ? (
+                            <Text style={styles.errorText}>{error}</Text>
+                        ) : null}
                     </View>
 
-                    {/* Timer/Resend */}
                     <View style={styles.resendContainer}>
                         {resendEnabled ? (
-                            <TouchableOpacity onPress={handleResend}>
+                            <TouchableOpacity
+                                onPress={handleResend}
+                                accessibilityRole="button"
+                                accessibilityLabel="Resend code"
+                            >
                                 <Text style={styles.resendText}>Resend Code</Text>
                             </TouchableOpacity>
                         ) : (
@@ -180,16 +195,21 @@ export default function PhoneOTP() {
                         )}
                     </View>
 
-                    {/* Verify Button */}
                     <TouchableOpacity
                         style={[
                             styles.verifyButton,
-                            otp.length < 6 && styles.disabledButton
+                            (otp.length < 6 || loading) && styles.disabledButton
                         ]}
                         onPress={() => handleVerify(otp)}
-                        disabled={otp.length < 6}
+                        disabled={otp.length < 6 || loading}
+                        accessibilityRole="button"
+                        accessibilityLabel="Verify code"
                     >
-                        <Text style={styles.verifyButtonText}>Verify</Text>
+                        {loading ? (
+                            <ActivityIndicator color="#000" />
+                        ) : (
+                            <Text style={styles.verifyButtonText}>Verify</Text>
+                        )}
                     </TouchableOpacity>
                 </View>
             </SafeAreaView>
@@ -224,8 +244,9 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     otpContainer: {
-        height: verticalScale(100),
+        height: verticalScale(120),
         marginBottom: verticalScale(30),
+        justifyContent: 'center',
     },
     otpInput: {
         width: '100%',
@@ -242,6 +263,12 @@ const styles = StyleSheet.create({
     },
     underlineStyleHighLighted: {
         borderColor: '#EAE5DC',
+    },
+    errorText: {
+        color: '#FF4444',
+        fontSize: moderateScale(14),
+        marginTop: 10,
+        textAlign: 'center',
     },
     resendContainer: {
         alignItems: 'center',
