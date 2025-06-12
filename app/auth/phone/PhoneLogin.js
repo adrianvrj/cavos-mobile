@@ -21,25 +21,12 @@ import { useFonts, JetBrainsMono_400Regular } from '@expo-google-fonts/jetbrains
 import { supabase } from '../../../lib/supabaseClient';
 import Header from '../../components/Header';
 import * as Haptics from 'expo-haptics';
+import { callingCodes } from '../../../lib/constants';
 
 const { width, height } = Dimensions.get('window');
 const scale = size => width / 375 * size;
 const verticalScale = size => height / 812 * size;
 const moderateScale = (size, factor = 0.5) => size + (scale(size) - size) * factor;
-
-const callingCodes = [
-  { country: 'Costa Rica', code: '506' },
-  { country: 'United States', code: '1' },
-  { country: 'Mexico', code: '52' },
-  { country: 'Spain', code: '34' },
-  { country: 'United Kingdom', code: '44' },
-  { country: 'Germany', code: '49' },
-  { country: 'Argentina', code: '54' },
-  { country: 'Brazil', code: '55' },
-  { country: 'India', code: '91' },
-  { country: 'Panama', code: '507' },
-  { country: 'Ecuador', code: '593' },
-];
 
 export default function PhoneLogin() {
   const navigation = useNavigation();
@@ -96,9 +83,13 @@ export default function PhoneLogin() {
     </TouchableOpacity>
   );
 
-  const filteredCodes = callingCodes.filter(c =>
-    c.country.toLowerCase().includes(countrySearch.toLowerCase())
-  );
+  const filteredCodes = Array.isArray(callingCodes)
+  ? callingCodes.filter(
+      c =>
+        typeof c.country === 'string' &&
+        c.country.toLowerCase().includes(countrySearch.toLowerCase())
+    )
+  : [];
 
   return (
     <SafeAreaView style={styles.container}>
@@ -291,12 +282,17 @@ const styles = StyleSheet.create({
   modalContainer: {
     backgroundColor: '#000',
     maxHeight: '80%',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    // width: '90%',
+    borderRadius: 20,
     position: 'absolute',
+    top: 0,
     bottom: 0,
     left: 0,
     right: 0,
+    margin: 'auto',
+    // Centra el contenido si es necesario
+    justifyContent: 'flex-start',
+    // alignItems: 'center',
   },
   searchInput: {
     backgroundColor: '#222',
