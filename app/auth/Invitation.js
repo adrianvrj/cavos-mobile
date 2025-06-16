@@ -12,6 +12,7 @@ import {
     TouchableWithoutFeedback,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { supabase } from '../../lib/supabaseClient';
 
 export default function Invitation() {
     const [invitationCode, setInvitationCode] = useState('');
@@ -27,13 +28,34 @@ export default function Invitation() {
         try {
             setIsLoading(true);
 
-            if (invitationCode === 'A48VRJ') {
+            // Check if the invitation code exists
+            const { data: codeData, error: codeError } = await supabase
+                .from('code')
+                .select('*')
+                .eq('invitation_code', invitationCode.toUpperCase())
+                .single();
+
+            if (codeError) {
+                if (codeError.code === 'PGRST116') {
+                    Alert.alert('Invalid Code', 'The invitation code is incorrect or expired.');
+                } else {
+                    throw codeError;
+                }
                 setIsLoading(false);
-                navigation.navigate('Pin');
-            } else {
-                setIsLoading(false);
-                Alert.alert('Invalid Code', 'The invitation code is incorrect or expired.');
+                return;
             }
+
+            const { error: updateError } = await supabase
+                .from('code')
+                .update({ uses: codeData.uses + 1 })
+                .eq('invitation_code', invitationCode.toUpperCase());
+
+            if (updateError) {
+                throw updateError;
+            }
+
+            setIsLoading(false);
+            navigation.navigate('Pin');
         } catch (error) {
             console.error('Error validating invitation code:', error);
             setIsLoading(false);
@@ -56,7 +78,7 @@ export default function Invitation() {
                         placeholderTextColor="#888"
                         maxLength={6}
                         value={invitationCode}
-                        onChangeText={setInvitationCode}
+                        onChangeText={(text) => setInvitationCode(text.toUpperCase())}
                         autoCapitalize="characters"
                         keyboardType="default"
                         selectionColor="#EAE5DC"

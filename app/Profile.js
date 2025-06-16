@@ -86,8 +86,8 @@ export default function Profile() {
     };
 
     const walletAddress = wallet?.address.startsWith('0x')
-        ? '0x' + wallet.address.slice(2).padStart(64, '0')
-        : '0x' + wallet.address.padStart(64, '0');
+        ? '0x' + wallet?.address.slice(2).padStart(64, '0')
+        : '0x' + wallet?.address.padStart(64, '0');
 
     const copyToClipboard = (text) => {
         Clipboard.setStringAsync(walletAddress);
