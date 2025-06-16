@@ -9,13 +9,17 @@ import {
     Dimensions,
     Platform,
     RefreshControl,
+    Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import * as Font from 'expo-font';
 import { useFonts, JetBrainsMono_400Regular } from '@expo-google-fonts/jetbrains-mono';
 import { useUserStore } from '../atoms/userId';
+import { useWallet } from '../atoms/wallet';
+import { supabase } from '../lib/supabaseClient';
 import LoggedHeader from './components/LoggedHeader';
 import LoadingModal from './components/LoadingModal';
+import * as Clipboard from 'expo-clipboard';
 
 const { width, height } = Dimensions.get('window');
 
@@ -25,11 +29,13 @@ const moderateScale = (size, factor = 0.5) => size + (scale(size) - size) * fact
 
 export default function Referral() {
     const [userReferrals, setUserReferrals] = useState(0);
-    const [totalPoolPrize, setTotalPoolPrize] = useState("TBD"); // Pool prize en USDC
+    const [totalPoolPrize, setTotalPoolPrize] = useState("TBD");
     const [userRewards, setUserRewards] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [referralCode, setReferralCode] = useState(null);
+    const wallet = useWallet((state) => state.wallet);
+    const userId = useUserStore((state) => state.userId);
 
     Font.useFonts({
         'Satoshi-Variable': require('../assets/fonts/Satoshi-Variable.ttf'),
@@ -42,11 +48,78 @@ export default function Referral() {
     Text.defaultProps = Text.defaultProps || {};
     Text.defaultProps.style = { fontFamily: 'Satoshi-Variable' };
 
+    const generateInvitationCode = async () => {
+        try {
+            setIsLoading(true);
+            
+            // Generate a random 6-character code using alphanumeric characters
+            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let code = '';
+            for (let i = 0; i < 6; i++) {
+                code += characters.charAt(Math.floor(Math.random() * characters.length));
+            }
+
+            const { data: existingCode, error: checkError } = await supabase
+                .from('code')
+                .select('*')
+                .eq('uid', userId)
+                .single();
+
+            if (checkError && checkError.code !== 'PGRST116') {
+                throw checkError;
+            }
+
+            if (existingCode) {
+                Alert.alert('Error', 'You already have an invitation code. Please use it to invite your friends.');
+            } else {
+                const { error: insertError } = await supabase
+                    .from('code')
+                    .insert([{ uid: userId, invitation_code: code }]);
+
+                if (insertError) {
+                    throw insertError;
+                }
+            }
+
+            setReferralCode(code);
+            Alert.alert('Success', 'Invitation code generated successfully!');
+        } catch (error) {
+            console.error('Error generating invitation code:', error);
+            Alert.alert('Error', 'Failed to generate invitation code. Please try again.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const copyToClipboard = async () => {
+        if (referralCode) {
+            await Clipboard.setStringAsync(referralCode);
+            Alert.alert('Copied!', 'Invitation code copied to clipboard.');
+        }
+    };
+
     const getReferralData = async () => {
         try {
             setIsLoading(true);
             setUserReferrals(0);
             setUserRewards(0);
+
+            const { data, error } = await supabase
+                .from('code')
+                .select('invitation_code, uses')
+                .eq('uid', userId)
+                .single();
+
+            if (error && error.code !== 'PGRST116') {
+                console.error('Error fetching invitation code:', error);
+            } else if (data) {
+                if (data.invitation_code) {
+                    setReferralCode(data.invitation_code);
+                }
+                if (data.uses !== null) {
+                    setUserReferrals(data.uses);
+                }
+            }
         } catch (error) {
             console.error('Error fetching referral data:', error);
         } finally {
@@ -62,11 +135,6 @@ export default function Referral() {
     const handleRefresh = () => {
         setIsRefreshing(true);
         getReferralData();
-    };
-
-    const handleInviteFriends = () => {
-        // Lógica para compartir código de referido cuando esté disponible
-        console.log('Invite friends functionality - Coming soon');
     };
 
     return (
@@ -172,38 +240,23 @@ export default function Referral() {
                     {referralCode ? (
                         <View style={styles.codeContainer}>
                             <Text style={styles.referralCodeText}>{referralCode}</Text>
-                            <TouchableOpacity style={styles.copyButton}>
+                            <TouchableOpacity 
+                                style={styles.copyButton}
+                                onPress={copyToClipboard}
+                            >
                                 <Text style={styles.copyButtonText}>Copy</Text>
                             </TouchableOpacity>
                         </View>
                     ) : (
                         <View style={styles.comingSoonCard}>
-                            <Text style={styles.comingSoonTitle}>Coming Soon</Text>
-                            <Text style={styles.comingSoonText}>
-                                Referral codes will be generated for each user very soon. 
-                                Stay tuned for updates!
-                            </Text>
+                            <TouchableOpacity 
+                                style={styles.generateButton}
+                                onPress={generateInvitationCode}
+                            >
+                                <Text style={styles.generateButtonText}>Generate Invitation Code</Text>
+                            </TouchableOpacity>
                         </View>
                     )}
-                </View>
-
-                {/* Action Button */}
-                <View style={styles.actionSection}>
-                    <TouchableOpacity 
-                        style={[styles.inviteButton, !referralCode && styles.disabledButton]} 
-                        onPress={handleInviteFriends}
-                        disabled={!referralCode}
-                    >
-                        <Text style={[styles.inviteButtonText, !referralCode && styles.disabledButtonText]}>
-                            {referralCode ? 'Invite Friends' : 'Coming Soon'}
-                        </Text>
-                    </TouchableOpacity>
-                </View>
-
-                {/* Status Indicator */}
-                <View style={styles.statusContainer}>
-                    <View style={styles.statusDot} />
-                    <Text style={styles.statusText}>Feature in development</Text>
                 </View>
             </ScrollView>
         </SafeAreaView>
@@ -373,7 +426,7 @@ const styles = StyleSheet.create({
     },
     codeContainer: {
         flexDirection: 'row',
-        backgroundColor: '#11110E',
+        backgroundColor: '#000000',
         borderRadius: moderateScale(12),
         padding: moderateScale(16),
         borderWidth: 1,
@@ -464,5 +517,18 @@ const styles = StyleSheet.create({
         color: '#777',
         fontSize: moderateScale(13),
         fontWeight: '500',
+    },
+    generateButton: {
+        backgroundColor: '#EAE5DC',
+        paddingHorizontal: moderateScale(20),
+        paddingVertical: verticalScale(12),
+        borderRadius: moderateScale(8),
+        alignItems: 'center',
+        marginTop: verticalScale(10),
+    },
+    generateButtonText: {
+        color: '#000',
+        fontSize: moderateScale(14),
+        fontWeight: '600',
     },
 });

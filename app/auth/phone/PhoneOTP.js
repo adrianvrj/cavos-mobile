@@ -76,9 +76,6 @@ export default function PhoneOTP() {
                 .select('*')
                 .eq('uid', userId)
                 .single();
-            if (error) {
-                Alert.alert('Error', 'Failed to fetch wallet information.');
-            }
             return !!data;
         } catch (error) {
             Alert.alert('Error', 'An error occurred while checking wallet information.');
@@ -113,7 +110,7 @@ export default function PhoneOTP() {
                         navigation.replace('Pin', { isReset: true });
                     } else {
                         if (!await hasWallet(data.user.id)) {
-                            navigation.replace('Invitation', { isReset: false });
+                            navigation.replace('Invitation');
                         } else {
                             navigation.replace('Pin');
                         }
