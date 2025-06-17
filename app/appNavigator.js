@@ -36,9 +36,10 @@ export default function AppNavigator() {
         .select('*')
         .eq('uid', userId)
         .single();
+      console.log(data);
       if (error) {
         console.error('Error fetching wallet info:', error);
-        Alert.alert('Error', 'Failed to fetch wallet information.');
+        return false;
       } else {
         if (data) {
           return true;
