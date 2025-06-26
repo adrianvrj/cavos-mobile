@@ -10,6 +10,7 @@ import {
   Platform,
   Alert,
   Animated,
+  TextInput,
 } from "react-native";
 import * as Font from "expo-font";
 import {
@@ -19,6 +20,7 @@ import {
 import { MaterialIcons } from "@expo/vector-icons";
 import { useWallet } from "../atoms/wallet";
 import * as Clipboard from "expo-clipboard";
+import QRCode from "react-native-qrcode-svg";
 
 const { width, height } = Dimensions.get("window");
 
@@ -31,6 +33,8 @@ export default function Receive() {
   const wallet = useWallet((state) => state.wallet);
   const [copiedAnimation] = useState(new Animated.Value(0));
   const [selectedMethod, setSelectedMethod] = useState("crypto"); // 'crypto' or 'bank' or 'qr'
+  const [amount, setAmount] = useState("");
+  const [showQR, setShowQR] = useState(false);
 
   const [fontsLoaded] = Font.useFonts({
     "Satoshi-Variable": require("../assets/fonts/Satoshi-Variable.ttf"),
@@ -83,6 +87,12 @@ export default function Receive() {
   const formatAddress = (address) => {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
+
+  // Construye el valor del QR (puedes personalizar el formato según tu necesidad)
+  const qrValue = JSON.stringify({
+    address: walletAddress,
+    amount: amount,
+  });
 
   return (
     <SafeAreaView style={styles.container}>
@@ -393,11 +403,61 @@ export default function Receive() {
           </View>
         ) : (
           // QR CODE content
-          <View style={{ alignItems: "center", marginTop: 40 }}>
+          <View style={{ alignItems: "center", marginTop: 40, width: "100%" }}>
             <Text style={{ color: "#EAE5DC", fontSize: 18, marginBottom: 16 }}>
-              Here will be the QR code for your address
+              Enter the amount to receive
             </Text>
-            {/* You can add a QR code component here in the future */}
+            <TextInput
+              style={{
+                backgroundColor: "#11110E",
+                color: "#EAE5DC",
+                borderRadius: 8,
+                borderWidth: 1,
+                borderColor: "#222",
+                padding: 12,
+                width: "80%",
+                fontSize: 18,
+                marginBottom: 20,
+                textAlign: "center",
+              }}
+              placeholder="Amount"
+              placeholderTextColor="#666"
+              keyboardType="numeric"
+              value={amount}
+              onChangeText={setAmount}
+            />
+            <TouchableOpacity
+              style={{
+                backgroundColor: "#EAE5DC",
+                borderRadius: 8,
+                paddingVertical: 12,
+                paddingHorizontal: 32,
+                marginBottom: 24,
+              }}
+              onPress={() => setShowQR(true)}
+              disabled={!amount}
+            >
+              <Text style={{ color: "#000", fontWeight: "bold", fontSize: 16 }}>
+                Generate QR Code
+              </Text>
+            </TouchableOpacity>
+            {showQR && (
+              <View
+                style={{
+                  marginTop: 16,
+                  backgroundColor: "#fff",
+                  padding: 16,
+                  borderRadius: 12,
+                }}
+              >
+                <QRCode value={qrValue} size={200} />
+                <Text
+                  style={{ color: "#000", marginTop: 8, textAlign: "center" }}
+                >
+                  Scan to pay {amount}
+                </Text>
+              </View>
+            )}
           </View>
         )}
       </ScrollView>
