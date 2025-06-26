@@ -475,21 +475,6 @@ export default function Receive() {
 
                   <View style={styles.qrActions}>
                     <TouchableOpacity
-                      style={styles.shareButton}
-                      onPress={() => {
-                        // Aquí puedes agregar funcionalidad de compartir
-                        Alert.alert("Share", "QR code sharing functionality");
-                      }}
-                    >
-                      <MaterialIcons
-                        name="share"
-                        size={moderateScale(18)}
-                        color="#EAE5DC"
-                      />
-                      <Text style={styles.shareButtonText}>Share</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
                       style={styles.resetButton}
                       onPress={() => {
                         setShowQR(false);
