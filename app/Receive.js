@@ -403,61 +403,142 @@ export default function Receive() {
           </View>
         ) : (
           // QR CODE content
-          <View style={{ alignItems: "center", marginTop: 40, width: "100%" }}>
-            <Text style={{ color: "#EAE5DC", fontSize: 18, marginBottom: 16 }}>
-              Enter the amount to receive
-            </Text>
-            <TextInput
-              style={{
-                backgroundColor: "#11110E",
-                color: "#EAE5DC",
-                borderRadius: 8,
-                borderWidth: 1,
-                borderColor: "#222",
-                padding: 12,
-                width: "80%",
-                fontSize: 18,
-                marginBottom: 20,
-                textAlign: "center",
-              }}
-              placeholder="Amount"
-              placeholderTextColor="#666"
-              keyboardType="numeric"
-              value={amount}
-              onChangeText={setAmount}
-            />
-            <TouchableOpacity
-              style={{
-                backgroundColor: "#EAE5DC",
-                borderRadius: 8,
-                paddingVertical: 12,
-                paddingHorizontal: 32,
-                marginBottom: 24,
-              }}
-              onPress={() => setShowQR(true)}
-              disabled={!amount}
-            >
-              <Text style={{ color: "#000", fontWeight: "bold", fontSize: 16 }}>
-                Generate QR Code
+          <View style={styles.qrContainer}>
+            <View style={styles.qrCard}>
+              <View style={styles.qrHeader}>
+                <MaterialIcons
+                  name="qr-code"
+                  size={moderateScale(20)}
+                  color="#666"
+                />
+                <Text style={styles.qrTitle}>GENERATE QR CODE</Text>
+              </View>
+
+              <Text style={styles.qrDescription}>
+                Create a payment request QR code with a specific amount
               </Text>
-            </TouchableOpacity>
-            {showQR && (
-              <View
-                style={{
-                  marginTop: 16,
-                  backgroundColor: "#fff",
-                  padding: 16,
-                  borderRadius: 12,
-                }}
+
+              <View style={styles.amountInputContainer}>
+                <Text style={styles.inputLabel}>Amount to Request</Text>
+                <TextInput
+                  style={styles.amountInput}
+                  placeholder="0.00"
+                  placeholderTextColor="#666"
+                  keyboardType="numeric"
+                  value={amount}
+                  onChangeText={setAmount}
+                />
+                <Text style={styles.currencyLabel}>USDC</Text>
+              </View>
+
+              <TouchableOpacity
+                style={[
+                  styles.generateButton,
+                  !amount && styles.generateButtonDisabled,
+                ]}
+                onPress={() => setShowQR(true)}
+                disabled={!amount}
               >
-                <QRCode value={qrValue} size={200} />
+                <MaterialIcons
+                  name="qr-code-scanner"
+                  size={moderateScale(20)}
+                  color={!amount ? "#666" : "#000"}
+                />
                 <Text
-                  style={{ color: "#000", marginTop: 8, textAlign: "center" }}
+                  style={[
+                    styles.generateButtonText,
+                    !amount && styles.generateButtonTextDisabled,
+                  ]}
                 >
-                  Scan to pay {amount}
+                  Generate QR Code
+                </Text>
+              </TouchableOpacity>
+
+              {showQR && amount && (
+                <View style={styles.qrResultContainer}>
+                  <View style={styles.qrCodeWrapper}>
+                    <QRCode
+                      value={qrValue}
+                      size={moderateScale(180)}
+                      backgroundColor="#FFFFFF"
+                      color="#000000"
+                    />
+                  </View>
+
+                  <View style={styles.qrInfo}>
+                    <Text style={styles.qrAmountLabel}>Requesting</Text>
+                    <Text style={styles.qrAmount}>{amount} USDC</Text>
+                    <Text style={styles.qrAddressLabel}>
+                      To: {formatAddress(walletAddress)}
+                    </Text>
+                  </View>
+
+                  <View style={styles.qrActions}>
+                    <TouchableOpacity
+                      style={styles.shareButton}
+                      onPress={() => {
+                        // Aquí puedes agregar funcionalidad de compartir
+                        Alert.alert("Share", "QR code sharing functionality");
+                      }}
+                    >
+                      <MaterialIcons
+                        name="share"
+                        size={moderateScale(18)}
+                        color="#EAE5DC"
+                      />
+                      <Text style={styles.shareButtonText}>Share</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={styles.resetButton}
+                      onPress={() => {
+                        setShowQR(false);
+                        setAmount("");
+                      }}
+                    >
+                      <MaterialIcons
+                        name="refresh"
+                        size={moderateScale(18)}
+                        color="#666"
+                      />
+                      <Text style={styles.resetButtonText}>Reset</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+            </View>
+
+            {/* QR Instructions */}
+            <View style={styles.qrInstructions}>
+              <Text style={styles.instructionsTitle}>HOW IT WORKS</Text>
+
+              <View style={styles.instructionItem}>
+                <View style={styles.instructionStep}>
+                  <Text style={styles.stepNumber}>1</Text>
+                </View>
+                <Text style={styles.instructionText}>
+                  Enter the amount you want to request
                 </Text>
               </View>
-            )}
+
+              <View style={styles.instructionItem}>
+                <View style={styles.instructionStep}>
+                  <Text style={styles.stepNumber}>2</Text>
+                </View>
+                <Text style={styles.instructionText}>
+                  Generate and share your QR code
+                </Text>
+              </View>
+
+              <View style={styles.instructionItem}>
+                <View style={styles.instructionStep}>
+                  <Text style={styles.stepNumber}>3</Text>
+                </View>
+                <Text style={styles.instructionText}>
+                  Sender scans and completes the payment
+                </Text>
+              </View>
+            </View>
           </View>
         )}
       </ScrollView>
@@ -743,5 +824,203 @@ const styles = StyleSheet.create({
     color: "#EAE5DC",
     fontSize: moderateScale(16),
     fontWeight: "500",
+  },
+  qrContainer: {
+    marginTop: verticalScale(20),
+    marginBottom: verticalScale(32),
+  },
+  qrCard: {
+    backgroundColor: "#11110E",
+    borderRadius: moderateScale(12),
+    padding: moderateScale(24),
+    borderWidth: 1,
+    borderColor: "#222",
+    marginBottom: verticalScale(24),
+  },
+  qrHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: verticalScale(12),
+  },
+  qrTitle: {
+    color: "#666",
+    fontSize: moderateScale(12),
+    marginLeft: moderateScale(8),
+    letterSpacing: 1,
+    fontWeight: "600",
+  },
+  qrDescription: {
+    color: "#888",
+    fontSize: moderateScale(14),
+    marginBottom: verticalScale(24),
+    lineHeight: moderateScale(20),
+  },
+  amountInputContainer: {
+    position: "relative",
+    marginBottom: verticalScale(24),
+  },
+  inputLabel: {
+    color: "#666",
+    fontSize: moderateScale(12),
+    marginBottom: verticalScale(8),
+    letterSpacing: 0.5,
+  },
+  amountInput: {
+    backgroundColor: "#000",
+    color: "#EAE5DC",
+    borderRadius: moderateScale(8),
+    borderWidth: 1,
+    borderColor: "#333",
+    paddingVertical: moderateScale(16),
+    paddingHorizontal: moderateScale(16),
+    paddingRight: moderateScale(60),
+    fontSize: moderateScale(18),
+    fontFamily: "JetBrainsMono_400Regular",
+  },
+  currencyLabel: {
+    position: "absolute",
+    right: moderateScale(16),
+    top: moderateScale(40),
+    color: "#666",
+    fontSize: moderateScale(14),
+    fontWeight: "600",
+  },
+  generateButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#EAE5DC",
+    borderRadius: moderateScale(8),
+    paddingVertical: moderateScale(16),
+    gap: moderateScale(8),
+    marginBottom: verticalScale(24),
+  },
+  generateButtonDisabled: {
+    backgroundColor: "#222",
+  },
+  generateButtonText: {
+    color: "#000",
+    fontSize: moderateScale(16),
+    fontWeight: "600",
+  },
+  generateButtonTextDisabled: {
+    color: "#666",
+  },
+  qrResultContainer: {
+    alignItems: "center",
+    borderTopWidth: 1,
+    borderTopColor: "#222",
+    paddingTop: verticalScale(24),
+  },
+  qrCodeWrapper: {
+    backgroundColor: "#FFFFFF",
+    padding: moderateScale(16),
+    borderRadius: moderateScale(12),
+    marginBottom: verticalScale(20),
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  qrInfo: {
+    alignItems: "center",
+    marginBottom: verticalScale(20),
+  },
+  qrAmountLabel: {
+    color: "#666",
+    fontSize: moderateScale(12),
+    marginBottom: verticalScale(4),
+  },
+  qrAmount: {
+    color: "#EAE5DC",
+    fontSize: moderateScale(24),
+    fontWeight: "600",
+    marginBottom: verticalScale(8),
+  },
+  qrAddressLabel: {
+    color: "#888",
+    fontSize: moderateScale(12),
+    fontFamily: "JetBrainsMono_400Regular",
+  },
+  qrActions: {
+    flexDirection: "row",
+    gap: moderateScale(12),
+    width: "100%",
+  },
+  shareButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#000",
+    borderRadius: moderateScale(8),
+    paddingVertical: moderateScale(12),
+    borderWidth: 1,
+    borderColor: "#333",
+    gap: moderateScale(6),
+  },
+  shareButtonText: {
+    color: "#EAE5DC",
+    fontSize: moderateScale(14),
+    fontWeight: "500",
+  },
+  resetButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "transparent",
+    borderRadius: moderateScale(8),
+    paddingVertical: moderateScale(12),
+    borderWidth: 1,
+    borderColor: "#333",
+    gap: moderateScale(6),
+  },
+  resetButtonText: {
+    color: "#666",
+    fontSize: moderateScale(14),
+    fontWeight: "500",
+  },
+  qrInstructions: {
+    backgroundColor: "#11110E",
+    borderRadius: moderateScale(12),
+    padding: moderateScale(20),
+    borderWidth: 1,
+    borderColor: "#222",
+  },
+  instructionsTitle: {
+    color: "#EAE5DC",
+    fontSize: moderateScale(12),
+    fontWeight: "600",
+    letterSpacing: 1,
+    marginBottom: verticalScale(16),
+  },
+  instructionItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: verticalScale(12),
+  },
+  instructionStep: {
+    width: moderateScale(24),
+    height: moderateScale(24),
+    borderRadius: moderateScale(12),
+    backgroundColor: "#000",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: moderateScale(12),
+    borderWidth: 1,
+    borderColor: "#333",
+  },
+  stepNumber: {
+    color: "#EAE5DC",
+    fontSize: moderateScale(12),
+    fontWeight: "600",
+  },
+  instructionText: {
+    color: "#888",
+    fontSize: moderateScale(14),
+    flex: 1,
+    lineHeight: moderateScale(18),
   },
 });
