@@ -424,9 +424,16 @@ export default function Receive() {
                   style={styles.amountInput}
                   placeholder="0.00"
                   placeholderTextColor="#666"
-                  keyboardType="numeric"
+                  keyboardType="decimal-pad"
                   value={amount}
-                  onChangeText={setAmount}
+                  onChangeText={(text) => {
+                    // Replace commas with periods and ensure only one decimal point
+                    const cleanedText = text.replace(/,/g, ".");
+                    const parts = cleanedText.split(".");
+                    if (parts.length <= 2) {
+                      setAmount(cleanedText);
+                    }
+                  }}
                 />
                 <Text style={styles.currencyLabel}>USDC</Text>
               </View>
