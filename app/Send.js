@@ -27,6 +27,7 @@ import { wallet_provider_api, WALLET_PROVIDER_TOKEN } from "../lib/constants";
 import { supabase } from "../lib/supabaseClient";
 import LoadingModal from "./components/LoadingModal";
 import LoggedHeader from "./components/LoggedHeader";
+import QRScanner from "./QRScanner";
 
 const { width, height } = Dimensions.get("window");
 
@@ -47,6 +48,7 @@ export default function Send() {
   const [showSummary, setShowSummary] = useState(false);
   const [fadeAnim] = useState(new Animated.Value(0));
   const [scaleAnim] = useState(new Animated.Value(0.95));
+  const [showQRScanner, setShowQRScanner] = useState(false);
 
   Font.useFonts({
     "Satoshi-Variable": require("../assets/fonts/Satoshi-Variable.ttf"),
@@ -145,13 +147,17 @@ export default function Send() {
     };
   };
 
-  const handleSend = async () => {
-    if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
+  const handleSend = async (optionalAmount = null, optionalAddress = null) => {
+    // Use optional parameters if provided, otherwise use state values
+    const amountToSend = optionalAmount !== null ? optionalAmount : amount;
+    const addressToSend =
+      optionalAddress !== null ? optionalAddress : recipientAddress;
+    if (!amountToSend || isNaN(amountToSend) || parseFloat(amountToSend) <= 0) {
       Alert.alert("Invalid Amount", "Please enter a valid amount");
       return;
     }
 
-    if (parseFloat(amount) > balance) {
+    if (parseFloat(amountToSend) > balance) {
       Alert.alert(
         "Insufficient Balance",
         "You don't have enough funds for this transfer"
@@ -159,12 +165,12 @@ export default function Send() {
       return;
     }
 
-    if (!recipientAddress) {
+    if (!addressToSend) {
       Alert.alert("Missing Address", "Please enter a recipient address");
       return;
     }
 
-    if (!validateStarknetAddress(recipientAddress)) {
+    if (!validateStarknetAddress(addressToSend)) {
       Alert.alert(
         "Invalid Address",
         "Please enter a valid Starknet wallet address"
@@ -174,10 +180,10 @@ export default function Send() {
 
     Alert.alert(
       "Confirm Transfer",
-      `Send $${amount} to ${recipientAddress.substring(
+      `Send $${amountToSend} to ${addressToSend.substring(
         0,
         6
-      )}...${recipientAddress.substring(recipientAddress.length - 4)}?`,
+      )}...${addressToSend.substring(addressToSend.length - 4)}?`,
       [
         { text: "Cancel", style: "cancel" },
         {
@@ -188,11 +194,11 @@ export default function Send() {
               const response = await axios.post(
                 wallet_provider_api + "wallet/send",
                 {
-                  amount: amount,
+                  amount: amountToSend,
                   address: wallet.address,
                   hashedPk: wallet.private_key,
                   hashedPin: wallet.pin,
-                  receiverAddress: recipientAddress,
+                  receiverAddress: addressToSend,
                 },
                 {
                   headers: {
@@ -215,7 +221,7 @@ export default function Send() {
                   {
                     uid: wallet.uid,
                     type: "Send",
-                    amount: amount,
+                    amount: amountToSend,
                     tx_hash: txHash,
                   },
                 ]);
@@ -227,7 +233,7 @@ export default function Send() {
                 return;
               }
 
-              let normalizedAddress = recipientAddress;
+              let normalizedAddress = addressToSend;
               if (normalizedAddress.startsWith("0x")) {
                 normalizedAddress =
                   "0x" + normalizedAddress.slice(2).replace(/^0+/, "");
@@ -248,7 +254,7 @@ export default function Send() {
                     {
                       uid: recipientUser.uid,
                       type: "Receive",
-                      amount: amount,
+                      amount: amountToSend,
                       tx_hash: txHash,
                     },
                   ]);
@@ -258,10 +264,10 @@ export default function Send() {
               setIsLoading(false);
               Alert.alert(
                 "Success",
-                `You've sent $${amount} to ${recipientAddress.substring(
+                `You've sent $${amountToSend} to ${addressToSend.substring(
                   0,
                   6
-                )}...${recipientAddress.substring(recipientAddress.length - 4)}`
+                )}...${addressToSend.substring(addressToSend.length - 4)}`
               );
               // Reset fields
               setAmount("");
@@ -282,12 +288,39 @@ export default function Send() {
   };
 
   const handleQRScan = () => {
-    // TODO: Implement QR code scanning functionality
-    Alert.alert(
-      "QR Scanner",
-      "QR code scanning functionality will be implemented here"
-    );
+    setShowQRScanner(true);
   };
+
+  const handleQRCodeScanned = (scannedAddress, amount) => {
+    // Parse amount to float and handle potential errors
+    let parsedAmount;
+    try {
+      parsedAmount = parseFloat(amount);
+      if (isNaN(parsedAmount)) {
+        console.warn("Invalid amount received from QR code:", amount);
+        parsedAmount = 0;
+      }
+    } catch (error) {
+      console.error("Error parsing amount from QR code:", error);
+      parsedAmount = 0;
+    }
+
+    // Call handleSend with the parsed data directly
+    handleSend(parsedAmount.toString(), scannedAddress);
+  };
+
+  const handleCloseQRScanner = () => {
+    setShowQRScanner(false);
+  };
+
+  if (showQRScanner) {
+    return (
+      <QRScanner
+        onQRCodeScanned={handleQRCodeScanned}
+        onClose={handleCloseQRScanner}
+      />
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -424,6 +457,23 @@ export default function Send() {
               />
               <Text style={styles.qrScannerText}>Tap to scan QR code</Text>
             </TouchableOpacity>
+
+            {/* Show scanned address if available */}
+            {recipientAddress && (
+              <View style={styles.scannedAddressContainer}>
+                <Text style={styles.scannedAddressLabel}>Scanned Address:</Text>
+                <Text style={styles.scannedAddressText}>
+                  {recipientAddress.substring(0, 6)}...
+                  {recipientAddress.substring(recipientAddress.length - 4)}
+                </Text>
+                <TouchableOpacity
+                  style={styles.clearButton}
+                  onPress={() => setRecipientAddress("")}
+                >
+                  <Text style={styles.clearButtonText}>Clear</Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         )}
 
@@ -898,5 +948,37 @@ const styles = StyleSheet.create({
     fontSize: moderateScale(16),
     textAlign: "center",
     lineHeight: moderateScale(22),
+  },
+  scannedAddressContainer: {
+    backgroundColor: "#111111",
+    borderRadius: moderateScale(12),
+    padding: moderateScale(16),
+    marginTop: verticalScale(16),
+    borderWidth: 1,
+    borderColor: "#333",
+  },
+  scannedAddressLabel: {
+    color: "#888",
+    fontSize: moderateScale(12),
+    marginBottom: verticalScale(8),
+    fontWeight: "500",
+  },
+  scannedAddressText: {
+    color: "#EAE5DC",
+    fontSize: moderateScale(14),
+    fontFamily: "JetBrainsMono_400Regular",
+    marginBottom: verticalScale(12),
+  },
+  clearButton: {
+    backgroundColor: "#FF6B6B",
+    paddingHorizontal: moderateScale(16),
+    paddingVertical: moderateScale(8),
+    borderRadius: moderateScale(6),
+    alignSelf: "flex-start",
+  },
+  clearButtonText: {
+    color: "#EAE5DC",
+    fontSize: moderateScale(12),
+    fontWeight: "600",
   },
 });
