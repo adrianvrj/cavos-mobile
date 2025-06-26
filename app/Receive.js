@@ -30,7 +30,7 @@ const moderateScale = (size, factor = 0.5) =>
 export default function Receive() {
   const wallet = useWallet((state) => state.wallet);
   const [copiedAnimation] = useState(new Animated.Value(0));
-  const [selectedMethod, setSelectedMethod] = useState("crypto"); // 'crypto' or 'bank'
+  const [selectedMethod, setSelectedMethod] = useState("crypto"); // 'crypto' or 'bank' or 'qr'
 
   const [fontsLoaded] = Font.useFonts({
     "Satoshi-Variable": require("../assets/fonts/Satoshi-Variable.ttf"),
@@ -157,6 +157,37 @@ export default function Receive() {
               ]}
             >
               Coming soon
+            </Text>
+          </TouchableOpacity>
+
+          {/* QR CODE Button */}
+          <TouchableOpacity
+            style={[
+              styles.methodOption,
+              selectedMethod === "qr" && styles.methodOptionSelected,
+            ]}
+            onPress={() => setSelectedMethod("qr")}
+          >
+            <MaterialIcons
+              name="qr-code"
+              size={moderateScale(24)}
+              color={selectedMethod === "qr" ? "#EAE5DC" : "#666"}
+            />
+            <Text
+              style={[
+                styles.methodText,
+                selectedMethod === "qr" && styles.methodTextSelected,
+              ]}
+            >
+              QR CODE
+            </Text>
+            <Text
+              style={[
+                styles.methodSubtext,
+                selectedMethod === "qr" && styles.methodSubtextSelected,
+              ]}
+            >
+              Scan your address
             </Text>
           </TouchableOpacity>
         </View>
@@ -335,7 +366,7 @@ export default function Receive() {
               </View>
             </View>
           </>
-        ) : (
+        ) : selectedMethod === "bank" ? (
           // Bank Transfer Content
           <View style={styles.comingSoonContainer}>
             <MaterialIcons
@@ -359,6 +390,14 @@ export default function Receive() {
               />
               <Text style={styles.notifyButtonText}>Notify me when ready</Text>
             </TouchableOpacity>
+          </View>
+        ) : (
+          // QR CODE content
+          <View style={{ alignItems: "center", marginTop: 40 }}>
+            <Text style={{ color: "#EAE5DC", fontSize: 18, marginBottom: 16 }}>
+              Here will be the QR code for your address
+            </Text>
+            {/* You can add a QR code component here in the future */}
           </View>
         )}
       </ScrollView>
@@ -401,11 +440,13 @@ const styles = StyleSheet.create({
   },
   methodOption: {
     flex: 1,
-    borderRadius: moderateScale(12),
-    padding: moderateScale(20),
+    borderRadius: moderateScale(8),
+    padding: moderateScale(12),
     alignItems: "center",
     borderWidth: 1,
     borderColor: "#222",
+    aspectRatio: 1,
+    justifyContent: "center",
   },
   methodOptionSelected: {
     borderColor: "#EAE5DC",
