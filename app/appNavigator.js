@@ -1,28 +1,28 @@
-import React, { useEffect, useState } from 'react';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { ActivityIndicator, View } from 'react-native';
-import { supabase } from '../lib/supabaseClient';
+import React, { useEffect, useState } from "react";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { ActivityIndicator, View } from "react-native";
+import { supabase } from "../lib/supabaseClient";
 // Screens
-import Login from './auth/Login';
-import Pin from './auth/Pin';
-import Dashboard from './Dashboard';
-import Investments from './Investments';
-import BitcoinAccount from './BitcoinAccount';
-import PhoneLogin from './auth/phone/PhoneLogin';
-import PhoneOTP from './auth/phone/PhoneOTP';
-import BuyBTC from './btc/BuyBTC';
-import SellBTC from './btc/SellBTC';
-import InvestBTC from './btc/InvestBTC';
-import Providers from './Providers';
-import BottomMenu from './components/BottomMenu';
-import Buy from './Buy';
-import Send from './Send';
-import Invest from './Invest';
-import Invitation from './auth/Invitation';
-import Profile from './Profile';
-import Referral from './Referral';
-import CardWaitlist from './CardWaitlist';
-import Search from './contacts/Search';
+import Login from "./auth/Login";
+import Pin from "./auth/Pin";
+import Dashboard from "./Dashboard";
+import Investments from "./Investments";
+import BitcoinAccount from "./BitcoinAccount";
+import PhoneLogin from "./auth/phone/PhoneLogin";
+import PhoneOTP from "./auth/phone/PhoneOTP";
+import BuyBTC from "./btc/BuyBTC";
+import SellBTC from "./btc/SellBTC";
+import InvestBTC from "./btc/InvestBTC";
+import Providers from "./Providers";
+import BottomMenu from "./components/BottomMenu";
+import Receive from "./Receive";
+import Send from "./Send";
+import Invest from "./Invest";
+import Invitation from "./auth/Invitation";
+import Profile from "./Profile";
+import Referral from "./Referral";
+import CardWaitlist from "./CardWaitlist";
+import Search from "./contacts/Search";
 
 const Stack = createNativeStackNavigator();
 
@@ -32,13 +32,14 @@ export default function AppNavigator() {
   const hasWallet = async (userId) => {
     try {
       const { data, error } = await supabase
-        .from('user_wallet')
-        .select('*')
-        .eq('uid', userId)
+        .from("user_wallet")
+        .select("*")
+        .eq("uid", userId)
         .single();
+      console.log(data);
       if (error) {
-        console.error('Error fetching wallet info:', error);
-        Alert.alert('Error', 'Failed to fetch wallet information.');
+        console.error("Error fetching wallet info:", error);
+        return false;
       } else {
         if (data) {
           return true;
@@ -47,8 +48,11 @@ export default function AppNavigator() {
         }
       }
     } catch (error) {
-      console.error('Error checking wallet:', error);
-      Alert.alert('Error', 'An error occurred while checking wallet information.');
+      console.error("Error checking wallet:", error);
+      Alert.alert(
+        "Error",
+        "An error occurred while checking wallet information."
+      );
       return false;
     }
   };
@@ -63,12 +67,12 @@ export default function AppNavigator() {
         const userId = session.user.id;
         const hasUserWallet = await hasWallet(userId);
         if (hasUserWallet) {
-          setInitialRoute('Pin');
+          setInitialRoute("Pin");
         } else {
-          setInitialRoute('Invitation');
+          setInitialRoute("Invitation");
         }
       } else {
-        setInitialRoute('Login');
+        setInitialRoute("Login");
       }
     };
 
@@ -77,7 +81,14 @@ export default function AppNavigator() {
 
   if (!initialRoute) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#11110E' }}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: "#11110E",
+        }}
+      >
         <ActivityIndicator size="large" color="#EAE5DC" />
       </View>
     );
@@ -85,7 +96,10 @@ export default function AppNavigator() {
 
   return (
     <Providers>
-      <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName={initialRoute}>
+      <Stack.Navigator
+        screenOptions={{ headerShown: false }}
+        initialRouteName={initialRoute}
+      >
         <Stack.Screen name="Dashboard" component={Dashboard} />
         <Stack.Screen name="Investments" component={Investments} />
         <Stack.Screen name="BitcoinAccount" component={BitcoinAccount} />
@@ -97,7 +111,7 @@ export default function AppNavigator() {
         <Stack.Screen name="InvestBTC" component={InvestBTC} />
         <Stack.Screen name="PhoneLogin" component={PhoneLogin} />
         <Stack.Screen name="PhoneOTP" component={PhoneOTP} />
-        <Stack.Screen name="Buy" component={Buy} />
+        <Stack.Screen name="Receive" component={Receive} />
         <Stack.Screen name="Send" component={Send} />
         <Stack.Screen name="Invest" component={Invest} />
         <Stack.Screen name="Invitation" component={Invitation} />
