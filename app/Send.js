@@ -245,8 +245,6 @@ export default function Send() {
                   .select("uid")
                   .eq("address", normalizedAddress)
                   .single();
-              console.log(normalizedAddress);
-              console.log("Recipient User:", recipientUser.uid);
               if (recipientUser && recipientUser.uid) {
                 const { error: txError } = await supabase
                   .from("transaction")
@@ -258,7 +256,6 @@ export default function Send() {
                       tx_hash: txHash,
                     },
                   ]);
-                console.log("Receive Transaction:", txError);
               }
 
               setIsLoading(false);

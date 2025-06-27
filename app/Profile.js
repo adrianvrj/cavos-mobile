@@ -128,7 +128,6 @@ export default function Profile() {
                             Alert.alert('Error', 'Could not delete transactions.');
                             return;
                         }
-                        console.log('Deleted transactions:', datatx);
                         const { error: walletError } = await supabase
                             .from('user_wallet')
                             .delete()
