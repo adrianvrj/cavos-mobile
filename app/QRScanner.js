@@ -19,32 +19,40 @@ const moderateScale = (size, factor = 0.5) =>
 export default function QRScanner({ onQRCodeScanned, onClose }) {
   const [scanned, setScanned] = useState(false);
   const [permission, requestPermission] = useCameraPermissions();
+  const [isScanning, setIsScanning] = useState(true);
+  const [hasProcessed, setHasProcessed] = useState(false);
 
   const handleBarCodeScanned = ({ type, data }) => {
-    // Prevent multiple scans
-    if (scanned) {
+    // Triple protection against multiple calls
+    if (scanned || !isScanning || hasProcessed) {
       return;
     }
 
     setScanned(true);
+    setIsScanning(false);
+    setHasProcessed(true); // Mark as processed
 
     try {
       const parsedData = JSON.parse(data);
-      // Validate if the QR code contains a valid Starknet address
       if (
         parsedData &&
         parsedData.address.startsWith("0x") &&
         parsedData.address.length === 66
       ) {
-        // Valid Starknet address found
         onQRCodeScanned(parsedData.address, parsedData.amount);
-        onClose();
       } else {
         Alert.alert(
           "Invalid QR Code",
           "The scanned QR code does not contain a valid Starknet wallet address.",
           [
-            { text: "Try Again", onPress: () => setScanned(false) },
+            {
+              text: "Try Again",
+              onPress: () => {
+                setScanned(false);
+                setIsScanning(true);
+                setHasProcessed(false);
+              },
+            },
             { text: "Cancel", onPress: onClose },
           ]
         );
@@ -55,7 +63,14 @@ export default function QRScanner({ onQRCodeScanned, onClose }) {
         "Invalid QR Code",
         "The scanned QR code format is not valid.",
         [
-          { text: "Try Again", onPress: () => setScanned(false) },
+          {
+            text: "Try Again",
+            onPress: () => {
+              setScanned(false);
+              setIsScanning(true);
+              setHasProcessed(false);
+            },
+          },
           { text: "Cancel", onPress: onClose },
         ]
       );
@@ -90,37 +105,42 @@ export default function QRScanner({ onQRCodeScanned, onClose }) {
 
   return (
     <View style={styles.container}>
-      <CameraView
-        style={styles.camera}
-        facing="back"
-        onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
-      >
-        <View style={styles.overlay}>
-          {/* Header */}
-          <View style={styles.header}>
-            <TouchableOpacity style={styles.backButton} onPress={onClose}>
-              <MaterialIcons name="arrow-back" size={24} color="#EAE5DC" />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Scan QR Code</Text>
-            <View style={styles.placeholder} />
-          </View>
+      {isScanning && !scanned && !hasProcessed ? (
+        <CameraView
+          style={styles.camera}
+          facing="back"
+          onBarcodeScanned={handleBarCodeScanned}
+        />
+      ) : (
+        <View style={styles.camera} />
+      )}
 
-          {/* Scanning Frame */}
-          <View style={styles.scanFrame}>
-            <View style={styles.cornerTopLeft} />
-            <View style={styles.cornerTopRight} />
-            <View style={styles.cornerBottomLeft} />
-            <View style={styles.cornerBottomRight} />
-          </View>
-
-          {/* Instructions */}
-          <View style={styles.instructions}>
-            <Text style={styles.instructionsText}>
-              Position the QR code within the frame
-            </Text>
-          </View>
+      {/* Overlay positioned absolutely */}
+      <View style={styles.overlay}>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={onClose}>
+            <MaterialIcons name="arrow-back" size={24} color="#EAE5DC" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Scan QR Code</Text>
+          <View style={styles.placeholder} />
         </View>
-      </CameraView>
+
+        {/* Scanning Frame */}
+        <View style={styles.scanFrame}>
+          <View style={styles.cornerTopLeft} />
+          <View style={styles.cornerTopRight} />
+          <View style={styles.cornerBottomLeft} />
+          <View style={styles.cornerBottomRight} />
+        </View>
+
+        {/* Instructions */}
+        <View style={styles.instructions}>
+          <Text style={styles.instructionsText}>
+            Position the QR code within the frame
+          </Text>
+        </View>
+      </View>
     </View>
   );
 }
@@ -134,7 +154,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   overlay: {
-    flex: 1,
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   header: {
