@@ -21,7 +21,7 @@ export default function Login() {
   Text.defaultProps.style = { fontFamily: "Satoshi-Variable" };
 
   const goToPhoneLogin = () => {
-    navigation.navigate("TermsAndConditions");
+    navigation.replace("PhoneLogin");
   };
 
   return (

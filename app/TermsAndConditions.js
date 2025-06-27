@@ -27,7 +27,7 @@ export default function TermsAndConditions() {
 
   const handleAccept = () => {
     if (accepted) {
-      navigation.navigate("PhoneLogin");
+      navigation.replace("Invitation");
     }
   };
 
