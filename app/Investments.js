@@ -88,7 +88,7 @@ export default function Investments() {
                 wallet_provider_api + 'vesu/positions',
                 {
                     address: wallet.address,
-                    pool: "Re7 USDC",
+                    pool: "Re7 Starknet Ecosystem",
                 },
                 {
                     headers: {
