@@ -1,7 +1,7 @@
 # Cavos Mobile App
 
 <div align="center">
-  <img src="assets/cavos-logo.png" alt="Cavos Logo" width="200" height="300">
+  <img src="assets/cavos-logo.png" alt="Cavos Logo" width="200" height="250">
 </div>
 
 A comprehensive mobile wallet application built with React Native and Expo, designed to provide users with secure cryptocurrency management, investment opportunities, and seamless financial services.
