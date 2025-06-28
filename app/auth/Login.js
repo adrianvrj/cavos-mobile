@@ -1,20 +1,27 @@
-import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Image, SafeAreaView } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import * as Font from 'expo-font';
+import React from "react";
+import {
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  Image,
+  SafeAreaView,
+} from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import * as Font from "expo-font";
 
 export default function Login() {
   const navigation = useNavigation();
 
   Font.useFonts({
-    'Satoshi-Variable': require('../../assets/fonts/Satoshi-Variable.ttf'),
+    "Satoshi-Variable": require("../../assets/fonts/Satoshi-Variable.ttf"),
   });
 
   Text.defaultProps = Text.defaultProps || {};
-  Text.defaultProps.style = { fontFamily: 'Satoshi-Variable' };
+  Text.defaultProps.style = { fontFamily: "Satoshi-Variable" };
 
   const goToPhoneLogin = () => {
-    navigation.navigate('PhoneLogin');
+    navigation.replace("PhoneLogin");
   };
 
   return (
@@ -22,7 +29,7 @@ export default function Login() {
       <View style={styles.content}>
         <View style={styles.logoContainer}>
           <Image
-            source={require('../../assets/light-vertical-cavos-logo.png')} // This should be the combined logo+text image
+            source={require("../../assets/light-vertical-cavos-logo.png")} // This should be the combined logo+text image
             style={styles.logoImage}
             resizeMode="contain"
           />
@@ -40,19 +47,19 @@ export default function Login() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: "#000000",
   },
   content: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingVertical: 40,
     paddingHorizontal: 20,
   },
   logoContainer: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   logoImage: {
     width: 300,
@@ -60,24 +67,24 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   taglineText: {
-    color: '#EAE5DC',
+    color: "#EAE5DC",
     fontSize: 18,
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: 10,
-    fontWeight: '300',
+    fontWeight: "300",
   },
   button: {
-    backgroundColor: '#EAE5DC',
-    width: '80%',
+    backgroundColor: "#EAE5DC",
+    width: "80%",
     paddingVertical: 16,
     borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 40,
   },
   buttonText: {
-    color: '#000000',
+    color: "#000000",
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: "500",
   },
 });

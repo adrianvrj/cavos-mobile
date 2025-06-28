@@ -23,6 +23,7 @@ import Profile from "./Profile";
 import Referral from "./Referral";
 import CardWaitlist from "./CardWaitlist";
 import Search from "./contacts/Search";
+import TermsAndConditions from "./TermsAndConditions";
 
 const Stack = createNativeStackNavigator();
 
@@ -36,7 +37,6 @@ export default function AppNavigator() {
         .select("*")
         .eq("uid", userId)
         .single();
-      console.log(data);
       if (error) {
         console.error("Error fetching wallet info:", error);
         return false;
@@ -119,6 +119,10 @@ export default function AppNavigator() {
         <Stack.Screen name="Referral" component={Referral} />
         <Stack.Screen name="CardWaitlist" component={CardWaitlist} />
         <Stack.Screen name="Search" component={Search} />
+        <Stack.Screen
+          name="TermsAndConditions"
+          component={TermsAndConditions}
+        />
       </Stack.Navigator>
     </Providers>
   );

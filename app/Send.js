@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   StyleSheet,
   Text,
@@ -49,6 +49,8 @@ export default function Send() {
   const [fadeAnim] = useState(new Animated.Value(0));
   const [scaleAnim] = useState(new Animated.Value(0.95));
   const [showQRScanner, setShowQRScanner] = useState(false);
+  const [isProcessingQR, setIsProcessingQR] = useState(false);
+  const hasProcessedQR = useRef(false);
 
   Font.useFonts({
     "Satoshi-Variable": require("../assets/fonts/Satoshi-Variable.ttf"),
@@ -147,17 +149,13 @@ export default function Send() {
     };
   };
 
-  const handleSend = async (optionalAmount = null, optionalAddress = null) => {
-    // Use optional parameters if provided, otherwise use state values
-    const amountToSend = optionalAmount !== null ? optionalAmount : amount;
-    const addressToSend =
-      optionalAddress !== null ? optionalAddress : recipientAddress;
-    if (!amountToSend || isNaN(amountToSend) || parseFloat(amountToSend) <= 0) {
+  const handleSend = async () => {
+    if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
       Alert.alert("Invalid Amount", "Please enter a valid amount");
       return;
     }
 
-    if (parseFloat(amountToSend) > balance) {
+    if (parseFloat(amount) > balance) {
       Alert.alert(
         "Insufficient Balance",
         "You don't have enough funds for this transfer"
@@ -165,12 +163,12 @@ export default function Send() {
       return;
     }
 
-    if (!addressToSend) {
+    if (!recipientAddress) {
       Alert.alert("Missing Address", "Please enter a recipient address");
       return;
     }
 
-    if (!validateStarknetAddress(addressToSend)) {
+    if (!validateStarknetAddress(recipientAddress)) {
       Alert.alert(
         "Invalid Address",
         "Please enter a valid Starknet wallet address"
@@ -180,10 +178,10 @@ export default function Send() {
 
     Alert.alert(
       "Confirm Transfer",
-      `Send $${amountToSend} to ${addressToSend.substring(
+      `Send $${amount} to ${recipientAddress.substring(
         0,
         6
-      )}...${addressToSend.substring(addressToSend.length - 4)}?`,
+      )}...${recipientAddress.substring(recipientAddress.length - 4)}?`,
       [
         { text: "Cancel", style: "cancel" },
         {
@@ -194,11 +192,11 @@ export default function Send() {
               const response = await axios.post(
                 wallet_provider_api + "wallet/send",
                 {
-                  amount: amountToSend,
+                  amount: amount,
                   address: wallet.address,
                   hashedPk: wallet.private_key,
                   hashedPin: wallet.pin,
-                  receiverAddress: addressToSend,
+                  receiverAddress: recipientAddress,
                 },
                 {
                   headers: {
@@ -221,7 +219,7 @@ export default function Send() {
                   {
                     uid: wallet.uid,
                     type: "Send",
-                    amount: amountToSend,
+                    amount: amount,
                     tx_hash: txHash,
                   },
                 ]);
@@ -233,7 +231,7 @@ export default function Send() {
                 return;
               }
 
-              let normalizedAddress = addressToSend;
+              let normalizedAddress = recipientAddress;
               if (normalizedAddress.startsWith("0x")) {
                 normalizedAddress =
                   "0x" + normalizedAddress.slice(2).replace(/^0+/, "");
@@ -245,8 +243,6 @@ export default function Send() {
                   .select("uid")
                   .eq("address", normalizedAddress)
                   .single();
-              console.log(normalizedAddress);
-              console.log("Recipient User:", recipientUser.uid);
               if (recipientUser && recipientUser.uid) {
                 const { error: txError } = await supabase
                   .from("transaction")
@@ -254,20 +250,19 @@ export default function Send() {
                     {
                       uid: recipientUser.uid,
                       type: "Receive",
-                      amount: amountToSend,
+                      amount: amount,
                       tx_hash: txHash,
                     },
                   ]);
-                console.log("Receive Transaction:", txError);
               }
 
               setIsLoading(false);
               Alert.alert(
                 "Success",
-                `You've sent $${amountToSend} to ${addressToSend.substring(
+                `You've sent $${amount} to ${recipientAddress.substring(
                   0,
                   6
-                )}...${addressToSend.substring(addressToSend.length - 4)}`
+                )}...${recipientAddress.substring(recipientAddress.length - 4)}`
               );
               // Reset fields
               setAmount("");
@@ -288,25 +283,185 @@ export default function Send() {
   };
 
   const handleQRScan = () => {
+    hasProcessedQR.current = false;
     setShowQRScanner(true);
   };
 
-  const handleQRCodeScanned = (scannedAddress, amount) => {
-    // Parse amount to float and handle potential errors
+  const handleQRCodeScanned = async (scannedAddress, amount) => {
+    if (hasProcessedQR.current) {
+      return;
+    }
+
+    if (isProcessingQR) {
+      return;
+    }
+
+    hasProcessedQR.current = true;
+    setIsProcessingQR(true);
+
+    setShowQRScanner(false);
+
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
     let parsedAmount;
     try {
       parsedAmount = parseFloat(amount);
       if (isNaN(parsedAmount)) {
         console.warn("Invalid amount received from QR code:", amount);
-        parsedAmount = 0;
+        Alert.alert("Invalid Amount", "Invalid amount received from QR code");
+        setIsProcessingQR(false);
+        return;
       }
     } catch (error) {
       console.error("Error parsing amount from QR code:", error);
-      parsedAmount = 0;
+      Alert.alert("Invalid Amount", "Error parsing amount from QR code");
+      setIsProcessingQR(false);
+      return;
     }
 
-    // Call handleSend with the parsed data directly
-    handleSend(parsedAmount.toString(), scannedAddress);
+    if (parsedAmount <= 0) {
+      Alert.alert("Invalid Amount", "Amount must be greater than 0");
+      setIsProcessingQR(false);
+      return;
+    }
+
+    if (parsedAmount > balance) {
+      Alert.alert(
+        "Insufficient Balance",
+        "You don't have enough funds for this transfer"
+      );
+      setIsProcessingQR(false);
+      return;
+    }
+
+    if (!scannedAddress) {
+      Alert.alert("Missing Address", "No address received from QR code");
+      setIsProcessingQR(false);
+      return;
+    }
+
+    if (!validateStarknetAddress(scannedAddress)) {
+      Alert.alert(
+        "Invalid Address",
+        "Invalid Starknet wallet address received from QR code"
+      );
+      setIsProcessingQR(false);
+      return;
+    }
+
+    Alert.alert(
+      "Confirm Transfer",
+      `Send $${parsedAmount} to ${scannedAddress.substring(
+        0,
+        6
+      )}...${scannedAddress.substring(scannedAddress.length - 4)}?`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+          onPress: () => {
+            setIsProcessingQR(false);
+          },
+        },
+        {
+          text: "Confirm",
+          onPress: async () => {
+            setIsLoading(true);
+            try {
+              const response = await axios.post(
+                wallet_provider_api + "wallet/send",
+                {
+                  amount: parsedAmount,
+                  address: wallet.address,
+                  hashedPk: wallet.private_key,
+                  hashedPin: wallet.pin,
+                  receiverAddress: scannedAddress,
+                },
+                {
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${WALLET_PROVIDER_TOKEN}`,
+                  },
+                }
+              );
+
+              if (!response.data.result) {
+                throw new Error("Transaction failed");
+              }
+
+              const txHash = response.data.result;
+
+              // Guarda la transacción del remitente (Send)
+              const { error: txError } = await supabase
+                .from("transaction")
+                .insert([
+                  {
+                    uid: wallet.uid,
+                    type: "Send",
+                    amount: parsedAmount,
+                    tx_hash: txHash,
+                  },
+                ]);
+
+              if (txError) {
+                console.error("Insert error:", txError);
+                Alert.alert("Error saving transaction to database");
+                setIsLoading(false);
+                setIsProcessingQR(false);
+                return;
+              }
+
+              let normalizedAddress = scannedAddress;
+              if (normalizedAddress.startsWith("0x")) {
+                normalizedAddress =
+                  "0x" + normalizedAddress.slice(2).replace(/^0+/, "");
+              }
+
+              const { data: recipientUser, error: recipientError } =
+                await supabase
+                  .from("user_wallet")
+                  .select("uid")
+                  .eq("address", normalizedAddress)
+                  .single();
+              if (recipientUser && recipientUser.uid) {
+                const { error: txError } = await supabase
+                  .from("transaction")
+                  .insert([
+                    {
+                      uid: recipientUser.uid,
+                      type: "Receive",
+                      amount: parsedAmount,
+                      tx_hash: txHash,
+                    },
+                  ]);
+              }
+
+              setIsLoading(false);
+              setIsProcessingQR(false);
+              Alert.alert(
+                "Success",
+                `You've sent $${parsedAmount} to ${scannedAddress.substring(
+                  0,
+                  6
+                )}...${scannedAddress.substring(scannedAddress.length - 4)}`
+              );
+              // Reset fields
+              setAmount("");
+              setRecipientAddress("");
+              navigation.navigate("BottomMenu");
+            } catch (error) {
+              console.error("Send error:", error);
+              setIsLoading(false);
+              setIsProcessingQR(false);
+              Alert.alert(
+                "Transaction Failed",
+                "An error occurred while sending funds. Please try again."
+              );
+            }
+          },
+        },
+      ]
+    );
   };
 
   const handleCloseQRScanner = () => {
