@@ -155,14 +155,14 @@ export default function Profile() {
             >
                 {/* Profile Header */}
                 <View style={styles.profileHeader}>
-                    <View style={styles.pfpContainer}>
+                    {/* <View style={styles.pfpContainer}>
                         <View style={styles.pfpBackground}>
                             <Icon name="person" size={50} color="#EAE5DC" />
                         </View>
                         <TouchableOpacity style={styles.editPfpButton}>
                             <Icon name="camera" size={18} color="#11110E" />
                         </TouchableOpacity>
-                    </View>
+                    </View> */}
                     <Text style={styles.welcomeText}>
                         {savedUsername ? `Welcome, ${savedUsername}` : 'Complete your profile'}
                     </Text>

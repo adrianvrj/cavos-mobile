@@ -162,56 +162,12 @@ export default function BitcoinAccount() {
     };
 
     const handleCloseInvestment = async () => {
-        if (!investedBtc || investedBtc <= 0) {
-            Alert.alert("No investments", "You have no investments to close.");
-            return;
-        }
-        animateButtonPress(async () => {
-            setIsLoading(true);
-            try {
-                const response = await axios.post(
-                    wallet_provider_api + 'vesu/positions/btc/withdraw',
-                    {
-                        address: wallet.address,
-                        hashedPk: wallet.private_key,
-                        hashedPin: wallet.pin,
-                        poolId: poolId,
-                    },
-                    {
-                        headers: {
-                            'Content-Type': 'application/json',
-                            Authorization: `Bearer ${WALLET_PROVIDER_TOKEN}`,
-                        },
-                    }
-                );
-
-                if (response.data.result == false) {
-                    Alert.alert("An error occurred", "Please try again later");
-                } else if (response.data.amount !== null && response.data.result !== null) {
-                    const { error: txError } = await supabase
-                        .from('transaction')
-                        .insert([
-                            {
-                                uid: wallet.uid,
-                                type: "Close Investment",
-                                amount: response.data.amount,
-                                tx_hash: response.data.result,
-                            },
-                        ]);
-
-                    if (txError) {
-                        console.error('Insert error:', txError);
-                        Alert.alert('Error saving transaction to database');
-                        return;
-                    }
-                    Alert.alert("Investment Closed", `${response.data.amount} BTC has been sent to your account, investment data might take a few minutes to update`);
-                }
-            } catch (error) {
-                Alert.alert("An error occurred", "Please try again later");
-                console.error('Error closing investment', error);
-            } finally {
-                setIsLoading(false);
-            }
+        animateButtonPress(() => {
+            Alert.alert(
+                "Coming Soon",
+                "BTC investment management features are coming soon! Stay tuned for updates.",
+                [{ text: "OK", style: "default" }]
+            );
         });
     };
 
@@ -229,7 +185,11 @@ export default function BitcoinAccount() {
 
     const goToInvest = () => {
         animateButtonPress(() => {
-            navigation.navigate('InvestBTC');
+            Alert.alert(
+                "Coming Soon",
+                "BTC investment feature is coming soon! Stay tuned for updates.",
+                [{ text: "OK", style: "default" }]
+            );
         });
     };
 
@@ -242,6 +202,7 @@ export default function BitcoinAccount() {
             <ScrollView
                 ref={scrollViewRef}
                 style={styles.scrollView}
+                contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
                 scrollEventThrottle={16}
                 refreshControl={
@@ -420,6 +381,10 @@ const styles = StyleSheet.create({
         flex: 1,
         marginHorizontal: moderateScale(10),
     },
+    scrollContent: {
+        flexGrow: 1,
+        paddingBottom: verticalScale(20),
+    },
     headerSection: {
         paddingTop: verticalScale(20),
         paddingBottom: verticalScale(30),
@@ -589,6 +554,6 @@ const styles = StyleSheet.create({
         fontWeight: '400',
     },
     bottomSpacing: {
-        height: verticalScale(60),
+        height: verticalScale(120),
     },
 });

@@ -220,7 +220,7 @@ export default function CardWaitlist() {
                     <View style={styles.titleSection}>
                         <View style={styles.titleUnderline} />
                         <Text style={styles.cardSubtitle}>
-                            Spend your crypto anywhere, anytime.{'\n'}
+                            Spend your money anywhere, anytime.{'\n'}
                             <Text style={styles.highlightText}>Join the exclusive waitlist</Text> to be among the first to experience the future of payments.
                         </Text>
                     </View>
@@ -410,7 +410,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: moderateScale(20),
     },
     formContainer: {
-        backgroundColor: 'rgba(17, 17, 14, 0.8)',
+        backgroundColor: '#000',
         borderRadius: moderateScale(24),
         padding: moderateScale(32),
         width: '100%',

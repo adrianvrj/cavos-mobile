@@ -175,7 +175,7 @@ export default function Investments() {
                 );
 
                 if (response.data.result == false) {
-                    Alert.alert("No rewards available", "Come back in a few days to claim your rewards");
+                    Alert.alert("No rewards available", response.data.message);
                 } else if (response.data.amount !== null && response.data.result !== null) {
                     const { error: txError } = await supabase
                         .from('transaction')
@@ -267,6 +267,7 @@ export default function Investments() {
             <ScrollView
                 ref={scrollViewRef}
                 style={styles.scrollView}
+                contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
                 scrollEventThrottle={16}
                 refreshControl={
@@ -417,6 +418,10 @@ const styles = StyleSheet.create({
     scrollView: {
         flex: 1,
         marginHorizontal: moderateScale(10),
+    },
+    scrollContent: {
+        flexGrow: 1,
+        paddingBottom: verticalScale(20),
     },
     headerSection: {
         paddingTop: verticalScale(20),
@@ -598,6 +603,6 @@ const styles = StyleSheet.create({
         fontWeight: '400',
     },
     bottomSpacing: {
-        height: verticalScale(60),
+        height: verticalScale(120),
     },
 });

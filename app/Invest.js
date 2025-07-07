@@ -237,7 +237,7 @@ export default function Invest() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#11110E',
+        backgroundColor: '#000',
         paddingTop: Platform.OS === 'android' ? verticalScale(20) : 0,
     },
     scrollContent: {

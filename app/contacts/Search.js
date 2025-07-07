@@ -324,7 +324,7 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     listContainer: {
-        paddingBottom: verticalScale(20),
+        paddingBottom: verticalScale(80),
     },
     resultItemContainer: {
         marginBottom: verticalScale(1),

@@ -1,12 +1,17 @@
 import { useNavigation } from '@react-navigation/native';
 import React from 'react';
 import { View, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function LoggedHeader() {
     const navigation = useNavigation();
 
     const goToProfile = () => {
         navigation.navigate('Profile'); // Ajusta el nombre de la ruta según tu navegación
+    };
+
+    const goToCardWaitlist = () => {
+        navigation.navigate('CardWaitlist');
     };
 
     return (
@@ -17,6 +22,10 @@ export default function LoggedHeader() {
                     style={styles.logoStyle}
                 />
             </TouchableOpacity>
+            
+            <TouchableOpacity onPress={goToCardWaitlist} style={styles.cardIconContainer}>
+                <Ionicons name="card" size={24} color="#EAE5DC" />
+            </TouchableOpacity>
         </View>
     );
 }
@@ -24,7 +33,7 @@ export default function LoggedHeader() {
 const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
-        justifyContent: 'flex-start',
+        justifyContent: 'space-between',
         alignItems: 'center',
         paddingHorizontal: 30,
         paddingTop: 20,
@@ -42,5 +51,11 @@ const styles = StyleSheet.create({
     logoStyle: {
         width: 24,
         height: 30,
+    },
+    cardIconContainer: {
+        borderRadius: 8,
+        padding: 8,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
 });
